@@ -1,0 +1,212 @@
+/**
+ * OverSeek Search - Admin Styles
+ * 
+ * Glassmorphism styling following SLDevs brand guidelines.
+ */
+
+.overseek-admin-app {
+    max-width: 1200px;
+    padding: 20px;
+}
+
+.overseek-admin-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #1e1e1e;
+}
+
+.overseek-admin-title .dashicons {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #2271b1;
+}
+
+/* Tab Panel */
+.overseek-tab-panel .components-tab-panel__tabs {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.overseek-tab-panel .components-tab-panel__tabs-item {
+    padding: 12px 20px;
+    font-weight: 500;
+    color: #50575e;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.overseek-tab-panel .components-tab-panel__tabs-item:hover {
+    color: #2271b1;
+}
+
+.overseek-tab-panel .components-tab-panel__tabs-item.is-active {
+    color: #2271b1;
+    border-bottom-color: #2271b1;
+}
+
+/* Cards */
+.overseek-card {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.overseek-card .components-card__header {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+    border-bottom: 1px solid #eee;
+}
+
+.overseek-card .components-card__body {
+    padding: 20px;
+}
+
+/* Index Stats */
+.overseek-index-stats {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.overseek-index-stats .stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.overseek-index-stats .stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2271b1;
+}
+
+.overseek-index-stats .stat-label {
+    font-size: 13px;
+    color: #666;
+}
+
+/* KPI Grid */
+.overseek-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-value {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    color: #2271b1;
+    line-height: 1.2;
+}
+
+.kpi-label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Tables */
+.overseek-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.overseek-table th,
+.overseek-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.overseek-table th {
+    font-weight: 600;
+    color: #1e1e1e;
+    background: #f8f9fa;
+}
+
+.overseek-table tr:hover td {
+    background: #f8f9fa;
+}
+
+/* Tables Grid */
+.overseek-tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+/* Date Filter */
+.overseek-date-filter {
+    margin-bottom: 20px;
+}
+
+.overseek-date-filter select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-left: 8px;
+}
+
+/* Synonym Form */
+.overseek-synonym-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 500px;
+}
+
+/* Save Button */
+.overseek-save-button {
+    margin-top: 20px;
+}
+
+/* Toggle Controls */
+.components-toggle-control {
+    margin-bottom: 16px;
+}
+
+/* Range Controls */
+.components-range-control {
+    margin-bottom: 20px;
+}
+
+/* Notices */
+.components-notice {
+    margin-bottom: 20px;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .overseek-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .overseek-tables-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .overseek-index-stats {
+        flex-wrap: wrap;
+    }
+}
