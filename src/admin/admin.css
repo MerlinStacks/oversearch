@@ -1,76 +1,397 @@
 /**
- * OverSeek Search - Admin Styles
+ * OverSeek Search - Admin Styles (2026 Neubrutalism Edition)
  * 
- * Glassmorphism styling following SLDevs brand guidelines.
+ * Bold, fast, eye-catching design with sharp edges,
+ * thick borders, vibrant accents, and smooth micro-animations.
  */
 
+/* ========================================
+   CSS CUSTOM PROPERTIES (Design Tokens)
+   ======================================== */
+:root {
+    /* Core palette - vibrant & bold */
+    --os-black: #0a0a0a;
+    --os-white: #fafafa;
+    --os-bg: #f5f5f0;
+    --os-card: #ffffff;
+
+    /* Accent colors - eye-catching */
+    --os-primary: #5046e5;
+    --os-primary-light: #6366f1;
+    --os-accent: #10b981;
+    --os-warning: #f59e0b;
+    --os-danger: #ef4444;
+    --os-purple: #8b5cf6;
+    --os-cyan: #06b6d4;
+    --os-pink: #ec4899;
+
+    /* Neubrutalism shadows */
+    --os-shadow-sm: 3px 3px 0 var(--os-black);
+    --os-shadow-md: 5px 5px 0 var(--os-black);
+    --os-shadow-lg: 8px 8px 0 var(--os-black);
+    --os-shadow-hover: 2px 2px 0 var(--os-black);
+
+    /* Borders */
+    --os-border: 3px solid var(--os-black);
+    --os-border-thin: 2px solid var(--os-black);
+
+    /* Typography */
+    --os-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --os-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Transitions */
+    --os-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --os-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ========================================
+   RESET / BASE
+   ======================================== */
 .overseek-admin-app {
-    max-width: 1200px;
-    padding: 20px;
+    font-family: var(--os-font);
+    background: var(--os-bg);
+    min-height: 100vh;
+    padding: 30px;
+    margin-left: -20px;
+    margin-right: 0;
+    margin-top: -10px;
+}
+
+/* Hide default WP admin notices in our area */
+.overseek-admin-app~.notice,
+.wrap>.notice:first-child {
+    display: none;
+}
+
+/* ========================================
+   HEADER / BRANDING
+   ======================================== */
+.overseek-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: var(--os-border-thin);
+}
+
+.overseek-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.overseek-logo {
+    width: 52px;
+    height: 52px;
+    background: var(--os-primary);
+    border: var(--os-border);
+    box-shadow: var(--os-shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    transform: rotate(-3deg);
 }
 
 .overseek-admin-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 28px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    color: #1e1e1e;
-}
-
-.overseek-admin-title .dashicons {
     font-size: 32px;
-    width: 32px;
-    height: 32px;
-    color: #2271b1;
+    font-weight: 800;
+    color: var(--os-black);
+    letter-spacing: -0.5px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-/* Tab Panel */
+.overseek-admin-title small {
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.overseek-version-badge {
+    background: var(--os-accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border: 2px solid var(--os-black);
+    box-shadow: 2px 2px 0 var(--os-black);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========================================
+   NAVIGATION TABS (Neubrutalist Pills)
+   ======================================== */
 .overseek-tab-panel .components-tab-panel__tabs {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ddd;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    border-bottom: none;
+    background: transparent;
+    padding: 0;
 }
 
 .overseek-tab-panel .components-tab-panel__tabs-item {
-    padding: 12px 20px;
-    font-weight: 500;
-    color: #50575e;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s ease;
+    padding: 14px 24px;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--os-black);
+    background: var(--os-white);
+    border: var(--os-border);
+    box-shadow: var(--os-shadow-sm);
+    transition: all var(--os-transition);
+    cursor: pointer;
 }
 
 .overseek-tab-panel .components-tab-panel__tabs-item:hover {
-    color: #2271b1;
+    transform: translate(-2px, -2px);
+    box-shadow: var(--os-shadow-md);
+    background: var(--os-primary-light);
+    color: white;
 }
 
 .overseek-tab-panel .components-tab-panel__tabs-item.is-active {
-    color: #2271b1;
-    border-bottom-color: #2271b1;
+    background: var(--os-primary);
+    color: white;
+    transform: translate(-2px, -2px);
+    box-shadow: var(--os-shadow-md);
 }
 
-/* Cards */
+/* ========================================
+   BENTO GRID LAYOUT
+   ======================================== */
+.overseek-bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 20px;
+}
+
+.overseek-bento-grid .bento-full {
+    grid-column: span 12;
+}
+
+.overseek-bento-grid .bento-half {
+    grid-column: span 6;
+}
+
+.overseek-bento-grid .bento-third {
+    grid-column: span 4;
+}
+
+.overseek-bento-grid .bento-quarter {
+    grid-column: span 3;
+}
+
+.overseek-bento-grid .bento-two-thirds {
+    grid-column: span 8;
+}
+
+@media (max-width: 1200px) {
+
+    .overseek-bento-grid .bento-half,
+    .overseek-bento-grid .bento-third,
+    .overseek-bento-grid .bento-quarter {
+        grid-column: span 6;
+    }
+
+    .overseek-bento-grid .bento-two-thirds {
+        grid-column: span 12;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .overseek-bento-grid .bento-half,
+    .overseek-bento-grid .bento-third,
+    .overseek-bento-grid .bento-quarter,
+    .overseek-bento-grid .bento-two-thirds {
+        grid-column: span 12;
+    }
+}
+
+/* ========================================
+   CARDS (Neubrutalist Style)
+   ======================================== */
 .overseek-card {
-    margin-bottom: 20px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: var(--os-card);
+    border: var(--os-border);
+    box-shadow: var(--os-shadow-md);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--os-transition);
+}
+
+.overseek-card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: var(--os-shadow-lg);
+}
+
+/* Remove default WP card styling */
+.overseek-card.components-card {
+    border-radius: 0;
 }
 
 .overseek-card .components-card__header {
-    padding: 16px 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-    border-bottom: 1px solid #eee;
+    padding: 20px 24px;
+    background: var(--os-black);
+    color: var(--os-white);
+    border-bottom: none;
+    border-radius: 0;
+}
+
+.overseek-card .components-card__header h3,
+.overseek-card .components-card__header h4 {
+    color: var(--os-white);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    margin: 0;
 }
 
 .overseek-card .components-card__body {
-    padding: 20px;
+    padding: 24px;
 }
 
-/* Index Stats */
+/* Card accent stripe */
+.overseek-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--os-primary);
+    opacity: 0;
+    transition: opacity var(--os-transition);
+}
+
+.overseek-card:hover::before {
+    opacity: 1;
+}
+
+/* Card variants */
+.overseek-card.card-accent::before {
+    background: var(--os-accent);
+    opacity: 1;
+}
+
+.overseek-card.card-warning::before {
+    background: var(--os-warning);
+    opacity: 1;
+}
+
+.overseek-card.card-danger::before {
+    background: var(--os-danger);
+    opacity: 1;
+}
+
+.overseek-card.card-purple::before {
+    background: var(--os-purple);
+    opacity: 1;
+}
+
+.overseek-card.card-cyan::before {
+    background: var(--os-cyan);
+    opacity: 1;
+}
+
+.overseek-card.card-pink::before {
+    background: var(--os-pink);
+    opacity: 1;
+}
+
+/* ========================================
+   KPI / STAT CARDS (Bento Heroes)
+   ======================================== */
+.overseek-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: var(--os-card);
+    border: var(--os-border);
+    box-shadow: var(--os-shadow-sm);
+    padding: 24px;
+    position: relative;
+    transition: all var(--os-spring);
+    cursor: default;
+}
+
+.kpi-card:hover {
+    transform: translate(-4px, -4px) rotate(-1deg);
+    box-shadow: var(--os-shadow-lg);
+}
+
+.kpi-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: var(--os-primary);
+}
+
+.kpi-card:nth-child(1)::after {
+    background: var(--os-primary);
+}
+
+.kpi-card:nth-child(2)::after {
+    background: var(--os-accent);
+}
+
+.kpi-card:nth-child(3)::after {
+    background: var(--os-warning);
+}
+
+.kpi-card:nth-child(4)::after {
+    background: var(--os-purple);
+}
+
+.kpi-card:nth-child(5)::after {
+    background: var(--os-cyan);
+}
+
+.kpi-value {
+    display: block;
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--os-black);
+    line-height: 1;
+    letter-spacing: -2px;
+    font-family: var(--os-font-mono);
+}
+
+.kpi-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #666;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Index stats variant */
 .overseek-index-stats {
     display: flex;
-    gap: 30px;
-    margin-bottom: 20px;
+    gap: 40px;
+    margin-bottom: 24px;
+    padding: 20px 0;
+    border-bottom: 2px dashed #ddd;
 }
 
 .overseek-index-stats .stat {
@@ -79,134 +400,389 @@
 }
 
 .overseek-index-stats .stat-value {
-    font-size: 24px;
-    font-weight: 600;
-    color: #2271b1;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--os-primary);
+    font-family: var(--os-font-mono);
+    letter-spacing: -1px;
 }
 
 .overseek-index-stats .stat-label {
-    font-size: 13px;
-    color: #666;
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* KPI Grid */
-.overseek-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
+/* ========================================
+   BUTTONS (Neubrutalist)
+   ======================================== */
+.overseek-admin-app .components-button {
+    border-radius: 0;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all var(--os-transition);
+}
+
+.overseek-admin-app .components-button.is-primary {
+    background: var(--os-primary);
+    color: white;
+    border: var(--os-border);
+    box-shadow: var(--os-shadow-sm);
+    padding: 12px 24px;
+}
+
+.overseek-admin-app .components-button.is-primary:hover {
+    background: var(--os-primary-light);
+    transform: translate(-2px, -2px);
+    box-shadow: var(--os-shadow-md);
+}
+
+.overseek-admin-app .components-button.is-primary:active {
+    transform: translate(0, 0);
+    box-shadow: var(--os-shadow-hover);
+}
+
+.overseek-admin-app .components-button.is-secondary {
+    background: var(--os-white);
+    color: var(--os-black);
+    border: var(--os-border);
+    box-shadow: var(--os-shadow-sm);
+    padding: 12px 24px;
+}
+
+.overseek-admin-app .components-button.is-secondary:hover {
+    background: var(--os-accent);
+    color: white;
+    transform: translate(-2px, -2px);
+    box-shadow: var(--os-shadow-md);
+}
+
+.overseek-admin-app .components-button.is-destructive {
+    background: var(--os-danger);
+    color: white;
+    border: var(--os-border);
+}
+
+.overseek-admin-app .components-button.is-link {
+    color: var(--os-primary);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.overseek-admin-app .components-button.is-link:hover {
+    color: var(--os-black);
+}
+
+.overseek-save-button {
+    margin-top: 28px;
+    font-size: 15px;
+}
+
+/* ========================================
+   FORM CONTROLS (Clean & Bold)
+   ======================================== */
+.overseek-admin-app .components-toggle-control {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--os-bg);
+    border: 2px solid #e5e5e5;
+    transition: all var(--os-transition);
+}
+
+.overseek-admin-app .components-toggle-control:hover {
+    border-color: var(--os-primary);
+}
+
+.overseek-admin-app .components-toggle-control .components-form-toggle.is-checked .components-form-toggle__track {
+    background: var(--os-accent);
+}
+
+.overseek-admin-app .components-range-control {
     margin-bottom: 24px;
 }
 
-.kpi-card {
-    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.overseek-admin-app .components-range-control__slider {
+    accent-color: var(--os-primary);
 }
 
-.kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.overseek-admin-app .components-text-control__input,
+.overseek-admin-app select {
+    border: var(--os-border-thin);
+    border-radius: 0;
+    padding: 12px 16px;
+    font-size: 14px;
+    transition: all var(--os-transition);
 }
 
-.kpi-value {
-    display: block;
-    font-size: 32px;
-    font-weight: 700;
-    color: #2271b1;
-    line-height: 1.2;
+.overseek-admin-app .components-text-control__input:focus,
+.overseek-admin-app select:focus {
+    outline: none;
+    border-color: var(--os-primary);
+    box-shadow: 3px 3px 0 var(--os-primary);
 }
 
-.kpi-label {
-    display: block;
-    font-size: 13px;
-    color: #666;
-    margin-top: 4px;
-}
-
-/* Tables */
+/* ========================================
+   TABLES (Sharp & Scannable)
+   ======================================== */
 .overseek-table {
     width: 100%;
     border-collapse: collapse;
-}
-
-.overseek-table th,
-.overseek-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
+    font-size: 14px;
 }
 
 .overseek-table th {
-    font-weight: 600;
-    color: #1e1e1e;
-    background: #f8f9fa;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--os-black);
+    background: var(--os-bg);
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: var(--os-border);
+}
+
+.overseek-table td {
+    padding: 16px;
+    border-bottom: 2px solid #eee;
+    transition: all var(--os-transition);
 }
 
 .overseek-table tr:hover td {
-    background: #f8f9fa;
+    background: #f0f0f0;
+    transform: translateX(4px);
 }
 
-/* Tables Grid */
-.overseek-tables-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 20px;
+.overseek-table td:first-child {
+    font-weight: 600;
 }
 
-/* Date Filter */
+/* ========================================
+   NOTICES (Bold Banners)
+   ======================================== */
+.overseek-admin-app .components-notice {
+    margin-bottom: 24px;
+    border-radius: 0;
+    border: var(--os-border);
+    box-shadow: var(--os-shadow-sm);
+    padding: 16px 20px;
+}
+
+.overseek-admin-app .components-notice.is-success {
+    background: var(--os-accent);
+    color: white;
+    border-color: var(--os-black);
+}
+
+.overseek-admin-app .components-notice.is-error {
+    background: var(--os-danger);
+    color: white;
+    border-color: var(--os-black);
+}
+
+.overseek-admin-app .components-notice.is-info {
+    background: var(--os-primary);
+    color: white;
+    border-color: var(--os-black);
+}
+
+.overseek-admin-app .components-notice.is-warning {
+    background: var(--os-warning);
+    color: var(--os-black);
+    border-color: var(--os-black);
+}
+
+/* ========================================
+   DATE FILTER
+   ======================================== */
 .overseek-date-filter {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.overseek-date-filter label {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
 }
 
 .overseek-date-filter select {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-left: 8px;
+    padding: 10px 16px;
+    background: var(--os-white);
+    border: var(--os-border);
+    box-shadow: var(--os-shadow-sm);
+    font-weight: 600;
+    cursor: pointer;
 }
 
-/* Synonym Form */
+.overseek-date-filter select:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: var(--os-shadow-md);
+}
+
+/* ========================================
+   SYNONYM FORM
+   ======================================== */
 .overseek-synonym-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    max-width: 500px;
+    gap: 20px;
+    max-width: 600px;
 }
 
-/* Save Button */
-.overseek-save-button {
-    margin-top: 20px;
+/* ========================================
+   TABLES GRID
+   ======================================== */
+.overseek-tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 24px;
 }
 
-/* Toggle Controls */
-.components-toggle-control {
-    margin-bottom: 16px;
-}
-
-/* Range Controls */
-.components-range-control {
-    margin-bottom: 20px;
-}
-
-/* Notices */
-.components-notice {
-    margin-bottom: 20px;
-}
-
-/* Responsive */
-@media (max-width: 782px) {
-    .overseek-kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
+@media (max-width: 1024px) {
     .overseek-tables-grid {
         grid-template-columns: 1fr;
     }
-    
+}
+
+/* ========================================
+   LOADING STATE
+   ======================================== */
+.overseek-admin-app .components-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 60px auto;
+    display: block;
+}
+
+/* ========================================
+   EMPTY STATES
+   ======================================== */
+.overseek-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #888;
+}
+
+.overseek-empty-state .emoji {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+}
+
+/* ========================================
+   QUICK ACTIONS BAR
+   ======================================== */
+.overseek-quick-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.overseek-card {
+    animation: slideIn 0.4s ease forwards;
+}
+
+.overseek-card:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.overseek-card:nth-child(2) {
+    animation-delay: 50ms;
+}
+
+.overseek-card:nth-child(3) {
+    animation-delay: 100ms;
+}
+
+.overseek-card:nth-child(4) {
+    animation-delay: 150ms;
+}
+
+.overseek-card:nth-child(5) {
+    animation-delay: 200ms;
+}
+
+.kpi-card {
+    animation: slideIn 0.4s ease forwards;
+}
+
+.kpi-card:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.kpi-card:nth-child(2) {
+    animation-delay: 75ms;
+}
+
+.kpi-card:nth-child(3) {
+    animation-delay: 150ms;
+}
+
+.kpi-card:nth-child(4) {
+    animation-delay: 225ms;
+}
+
+.kpi-card:nth-child(5) {
+    animation-delay: 300ms;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 782px) {
+    .overseek-admin-app {
+        padding: 16px;
+        margin-left: 0;
+    }
+
+    .overseek-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .overseek-admin-title {
+        font-size: 24px;
+    }
+
+    .overseek-tab-panel .components-tab-panel__tabs {
+        flex-wrap: wrap;
+    }
+
+    .overseek-tab-panel .components-tab-panel__tabs-item {
+        padding: 10px 16px;
+        font-size: 12px;
+    }
+
+    .kpi-value {
+        font-size: 32px;
+    }
+
     .overseek-index-stats {
         flex-wrap: wrap;
+        gap: 24px;
     }
 }

@@ -1,10 +1,10 @@
 /**
- * OverSeek Search - Admin App Entry Point
+ * OverSeek Search - Admin App Entry Point (2026 Edition)
  * 
- * Mounts the React admin dashboard with Settings, Analytics, and Synonyms tabs.
+ * Neubrutalist dashboard with Settings, Analytics, Synonyms, and Boosts tabs.
  */
 
-import { createRoot, useState, useEffect } from '@wordpress/element';
+import { createRoot, useState, useEffect, useCallback } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import {
     TabPanel,
@@ -17,6 +17,7 @@ import {
     Card,
     CardHeader,
     CardBody,
+    SelectControl,
     __experimentalHeading as Heading,
 } from '@wordpress/components';
 
@@ -24,6 +25,26 @@ import './admin.css';
 
 // Configure API fetch with nonce.
 apiFetch.use(apiFetch.createNonceMiddleware(window.overseekSearchAdmin?.nonce));
+
+/**
+ * Header Component
+ */
+function AdminHeader() {
+    const { version } = window.overseekSearchAdmin;
+
+    return (
+        <header className="overseek-header">
+            <div className="overseek-brand">
+                <div className="overseek-logo">🔍</div>
+                <h1 className="overseek-admin-title">
+                    OverSeek Search
+                    <small>WooCommerce Search Engine</small>
+                </h1>
+            </div>
+            <span className="overseek-version-badge">v{version}</span>
+        </header>
+    );
+}
 
 /**
  * Settings Tab Component
@@ -66,7 +87,7 @@ function SettingsTab() {
                 method: 'POST',
                 data: settings,
             });
-            setNotice({ type: 'success', message: window.overseekSearchAdmin.i18n.saved });
+            setNotice({ type: 'success', message: '✓ Settings saved successfully!' });
         } catch (error) {
             setNotice({ type: 'error', message: 'Failed to save settings' });
         }
@@ -75,7 +96,7 @@ function SettingsTab() {
 
     const handleReindex = async () => {
         setReindexing(true);
-        setNotice({ type: 'info', message: 'Reindexing in progress...' });
+        setNotice({ type: 'info', message: '⏳ Reindexing in progress...' });
         try {
             const response = await apiFetch({
                 path: '/overseek-search/v1/reindex',
@@ -83,7 +104,7 @@ function SettingsTab() {
             });
             setNotice({
                 type: 'success',
-                message: `Reindex complete! Indexed ${response.stats.indexed} products.`
+                message: `✓ Indexed ${response.stats.indexed} products successfully!`
             });
             loadIndexStats();
         } catch (error) {
@@ -112,122 +133,134 @@ function SettingsTab() {
                 </Notice>
             )}
 
-            <Card className="overseek-card">
-                <CardHeader>
-                    <Heading level={3}>Index Status</Heading>
-                </CardHeader>
-                <CardBody>
-                    <div className="overseek-index-stats">
-                        <div className="stat">
-                            <span className="stat-value">{indexStats?.indexed_count || 0}</span>
-                            <span className="stat-label">Products Indexed</span>
+            <div className="overseek-bento-grid">
+                <Card className="overseek-card bento-full card-accent">
+                    <CardHeader>
+                        <Heading level={3}>⚡ Index Status</Heading>
+                    </CardHeader>
+                    <CardBody>
+                        <div className="overseek-index-stats">
+                            <div className="stat">
+                                <span className="stat-value">{indexStats?.indexed_count || 0}</span>
+                                <span className="stat-label">Products Indexed</span>
+                            </div>
+                            <div className="stat">
+                                <span className="stat-value">{indexStats?.total_products || 0}</span>
+                                <span className="stat-label">Total Products</span>
+                            </div>
+                            <div className="stat">
+                                <span className="stat-value">{indexStats?.last_updated || 'Never'}</span>
+                                <span className="stat-label">Last Updated</span>
+                            </div>
                         </div>
-                        <div className="stat">
-                            <span className="stat-value">{indexStats?.total_products || 0}</span>
-                            <span className="stat-label">Total Products</span>
-                        </div>
-                        <div className="stat">
-                            <span className="stat-value">{indexStats?.last_updated || 'Never'}</span>
-                            <span className="stat-label">Last Updated</span>
-                        </div>
-                    </div>
-                    <Button
-                        variant="secondary"
-                        onClick={handleReindex}
-                        disabled={reindexing}
-                        isBusy={reindexing}
-                    >
-                        {reindexing ? window.overseekSearchAdmin.i18n.reindexing : window.overseekSearchAdmin.i18n.reindex}
-                    </Button>
-                </CardBody>
-            </Card>
+                        <Button
+                            variant="secondary"
+                            onClick={handleReindex}
+                            disabled={reindexing}
+                            isBusy={reindexing}
+                        >
+                            {reindexing ? '⏳ REINDEXING...' : '🔄 REBUILD INDEX'}
+                        </Button>
+                    </CardBody>
+                </Card>
 
-            <Card className="overseek-card">
-                <CardHeader>
-                    <Heading level={3}>Search Settings</Heading>
-                </CardHeader>
-                <CardBody>
-                    <ToggleControl
-                        label="Enable Fuzzy Matching (Typo Tolerance)"
-                        checked={settings.fuzzy_enabled}
-                        onChange={(value) => updateSetting('fuzzy_enabled', value)}
-                    />
-                    {settings.fuzzy_enabled && (
-                        <RangeControl
-                            label="Fuzzy Threshold (max typos allowed)"
-                            value={settings.fuzzy_threshold}
-                            onChange={(value) => updateSetting('fuzzy_threshold', value)}
-                            min={1}
-                            max={3}
+                <Card className="overseek-card bento-half">
+                    <CardHeader>
+                        <Heading level={3}>🔧 Search Behavior</Heading>
+                    </CardHeader>
+                    <CardBody>
+                        <ToggleControl
+                            label="Enable Fuzzy Matching (Typo Tolerance)"
+                            checked={settings.fuzzy_enabled}
+                            onChange={(value) => updateSetting('fuzzy_enabled', value)}
                         />
-                    )}
-                    <RangeControl
-                        label="Results Per Page"
-                        value={settings.results_per_page}
-                        onChange={(value) => updateSetting('results_per_page', value)}
-                        min={4}
-                        max={20}
-                    />
-                    <RangeControl
-                        label="Max Dropdown Results"
-                        help="Number of products shown in the search dropdown"
-                        value={settings.max_dropdown_results || 5}
-                        onChange={(value) => updateSetting('max_dropdown_results', value)}
-                        min={1}
-                        max={15}
-                    />
-                    <ToggleControl
-                        label="Highlight Matching Terms"
-                        checked={settings.highlight_matches}
-                        onChange={(value) => updateSetting('highlight_matches', value)}
-                    />
-                    <ToggleControl
-                        label="Enable Voice Search"
-                        checked={settings.voice_search}
-                        onChange={(value) => updateSetting('voice_search', value)}
-                    />
-                    <ToggleControl
-                        label="Track Search Analytics"
-                        checked={settings.track_analytics}
-                        onChange={(value) => updateSetting('track_analytics', value)}
-                    />
-                    <ToggleControl
-                        label="Replace WooCommerce Search"
-                        help="Replace the default WooCommerce search bar with OverSeek's instant search"
-                        checked={settings.replace_search !== false}
-                        onChange={(value) => updateSetting('replace_search', value)}
-                    />
-                </CardBody>
-            </Card>
+                        {settings.fuzzy_enabled && (
+                            <RangeControl
+                                label="Fuzzy Threshold (max typos)"
+                                value={settings.fuzzy_threshold}
+                                onChange={(value) => updateSetting('fuzzy_threshold', value)}
+                                min={1}
+                                max={3}
+                            />
+                        )}
+                        <RangeControl
+                            label="Results Per Page"
+                            value={settings.results_per_page}
+                            onChange={(value) => updateSetting('results_per_page', value)}
+                            min={4}
+                            max={20}
+                        />
+                        <RangeControl
+                            label="Max Dropdown Results"
+                            help="Number of products shown in the search dropdown"
+                            value={settings.max_dropdown_results || 5}
+                            onChange={(value) => updateSetting('max_dropdown_results', value)}
+                            min={1}
+                            max={15}
+                        />
+                    </CardBody>
+                </Card>
 
-            <Card className="overseek-card">
-                <CardHeader>
-                    <Heading level={3}>Relevance Weights</Heading>
-                </CardHeader>
-                <CardBody>
-                    <RangeControl
-                        label="Title Weight"
-                        value={settings.title_weight}
-                        onChange={(value) => updateSetting('title_weight', value)}
-                        min={1}
-                        max={5}
-                    />
-                    <RangeControl
-                        label="SKU Weight"
-                        value={settings.sku_weight}
-                        onChange={(value) => updateSetting('sku_weight', value)}
-                        min={1}
-                        max={5}
-                    />
-                    <RangeControl
-                        label="Description Weight"
-                        value={settings.description_weight}
-                        onChange={(value) => updateSetting('description_weight', value)}
-                        min={1}
-                        max={5}
-                    />
-                </CardBody>
-            </Card>
+                <Card className="overseek-card bento-half">
+                    <CardHeader>
+                        <Heading level={3}>✨ Features</Heading>
+                    </CardHeader>
+                    <CardBody>
+                        <ToggleControl
+                            label="Highlight Matching Terms"
+                            checked={settings.highlight_matches}
+                            onChange={(value) => updateSetting('highlight_matches', value)}
+                        />
+                        <ToggleControl
+                            label="Enable Voice Search"
+                            checked={settings.voice_search}
+                            onChange={(value) => updateSetting('voice_search', value)}
+                        />
+                        <ToggleControl
+                            label="Track Search Analytics"
+                            checked={settings.track_analytics}
+                            onChange={(value) => updateSetting('track_analytics', value)}
+                        />
+                        <ToggleControl
+                            label="Replace WooCommerce Search"
+                            help="Replace the default search bar with OverSeek"
+                            checked={settings.replace_search !== false}
+                            onChange={(value) => updateSetting('replace_search', value)}
+                        />
+                    </CardBody>
+                </Card>
+
+                <Card className="overseek-card bento-full">
+                    <CardHeader>
+                        <Heading level={3}>⚖️ Relevance Weights</Heading>
+                    </CardHeader>
+                    <CardBody>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+                            <RangeControl
+                                label="Title Weight"
+                                value={settings.title_weight}
+                                onChange={(value) => updateSetting('title_weight', value)}
+                                min={1}
+                                max={5}
+                            />
+                            <RangeControl
+                                label="SKU Weight"
+                                value={settings.sku_weight}
+                                onChange={(value) => updateSetting('sku_weight', value)}
+                                min={1}
+                                max={5}
+                            />
+                            <RangeControl
+                                label="Description Weight"
+                                value={settings.description_weight}
+                                onChange={(value) => updateSetting('description_weight', value)}
+                                min={1}
+                                max={5}
+                            />
+                        </div>
+                    </CardBody>
+                </Card>
+            </div>
 
             <Button
                 variant="primary"
@@ -236,7 +269,7 @@ function SettingsTab() {
                 isBusy={saving}
                 className="overseek-save-button"
             >
-                {window.overseekSearchAdmin.i18n.saveSettings}
+                {saving ? '⏳ SAVING...' : '💾 SAVE SETTINGS'}
             </Button>
         </div>
     );
@@ -280,7 +313,7 @@ function AnalyticsTab() {
     return (
         <div className="overseek-analytics">
             <div className="overseek-date-filter">
-                <label>Time Period: </label>
+                <label>📅 TIME PERIOD:</label>
                 <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
                     <option value={7}>Last 7 days</option>
                     <option value={30}>Last 30 days</option>
@@ -314,11 +347,14 @@ function AnalyticsTab() {
             <div className="overseek-tables-grid">
                 <Card className="overseek-card">
                     <CardHeader>
-                        <Heading level={4}>Top Search Queries</Heading>
+                        <Heading level={4}>🔥 Top Search Queries</Heading>
                     </CardHeader>
                     <CardBody>
                         {topQueries.length === 0 ? (
-                            <p>No search data yet</p>
+                            <div className="overseek-empty-state">
+                                <span className="emoji">📊</span>
+                                <p>No search data yet. Searches will appear here.</p>
+                            </div>
                         ) : (
                             <table className="overseek-table">
                                 <thead>
@@ -342,13 +378,16 @@ function AnalyticsTab() {
                     </CardBody>
                 </Card>
 
-                <Card className="overseek-card">
+                <Card className="overseek-card card-warning">
                     <CardHeader>
-                        <Heading level={4}>Queries With No Results</Heading>
+                        <Heading level={4}>⚠️ Queries With No Results</Heading>
                     </CardHeader>
                     <CardBody>
                         {noResults.length === 0 ? (
-                            <p>All searches returned results! 🎉</p>
+                            <div className="overseek-empty-state">
+                                <span className="emoji">🎉</span>
+                                <p>All searches returned results!</p>
+                            </div>
                         ) : (
                             <table className="overseek-table">
                                 <thead>
@@ -368,7 +407,7 @@ function AnalyticsTab() {
                                                     variant="link"
                                                     href={`${window.overseekSearchAdmin.adminUrl}?page=overseek-search-synonyms&add=${encodeURIComponent(q.query)}`}
                                                 >
-                                                    Add Synonym
+                                                    + Add Synonym
                                                 </Button>
                                             </td>
                                         </tr>
@@ -437,7 +476,7 @@ function SynonymsTab() {
             setNewSynonyms('');
             setNewOneWay(false);
             loadSynonyms();
-            setNotice({ type: 'success', message: 'Synonym added!' });
+            setNotice({ type: 'success', message: '✓ Synonym added!' });
         } catch (error) {
             setNotice({ type: 'error', message: 'Failed to add synonym' });
         }
@@ -474,81 +513,298 @@ function SynonymsTab() {
                 </Notice>
             )}
 
-            <Card className="overseek-card">
-                <CardHeader>
-                    <Heading level={3}>{window.overseekSearchAdmin.i18n.addSynonym}</Heading>
-                </CardHeader>
-                <CardBody>
-                    <div className="overseek-synonym-form">
-                        <TextControl
-                            label={window.overseekSearchAdmin.i18n.baseTerm}
-                            value={newBaseTerm}
-                            onChange={setNewBaseTerm}
-                            placeholder="e.g., sneakers"
-                        />
-                        <TextControl
-                            label={window.overseekSearchAdmin.i18n.synonymsList}
-                            value={newSynonyms}
-                            onChange={setNewSynonyms}
-                            placeholder="e.g., trainers, kicks, tennis shoes"
-                        />
-                        <ToggleControl
-                            label={window.overseekSearchAdmin.i18n.oneWay}
-                            help="If enabled, only the base term will expand to synonyms, not vice versa"
-                            checked={newOneWay}
-                            onChange={setNewOneWay}
-                        />
-                        <Button
-                            variant="primary"
-                            onClick={addSynonym}
-                            disabled={saving}
-                            isBusy={saving}
-                        >
-                            {window.overseekSearchAdmin.i18n.addSynonym}
-                        </Button>
-                    </div>
-                </CardBody>
-            </Card>
+            <div className="overseek-bento-grid">
+                <Card className="overseek-card bento-half card-purple">
+                    <CardHeader>
+                        <Heading level={3}>➕ Add New Synonym</Heading>
+                    </CardHeader>
+                    <CardBody>
+                        <div className="overseek-synonym-form">
+                            <TextControl
+                                label="Base Term"
+                                value={newBaseTerm}
+                                onChange={setNewBaseTerm}
+                                placeholder="e.g., sneakers"
+                            />
+                            <TextControl
+                                label="Synonyms (comma separated)"
+                                value={newSynonyms}
+                                onChange={setNewSynonyms}
+                                placeholder="e.g., trainers, kicks, tennis shoes"
+                            />
+                            <ToggleControl
+                                label="One-way only"
+                                help="Base term expands to synonyms, but not vice versa"
+                                checked={newOneWay}
+                                onChange={setNewOneWay}
+                            />
+                            <Button
+                                variant="primary"
+                                onClick={addSynonym}
+                                disabled={saving}
+                                isBusy={saving}
+                            >
+                                {saving ? '⏳ ADDING...' : '➕ ADD SYNONYM'}
+                            </Button>
+                        </div>
+                    </CardBody>
+                </Card>
 
-            <Card className="overseek-card">
-                <CardHeader>
-                    <Heading level={3}>Existing Synonyms</Heading>
-                </CardHeader>
-                <CardBody>
-                    {synonyms.length === 0 ? (
-                        <p>No synonyms configured yet</p>
-                    ) : (
-                        <table className="overseek-table">
-                            <thead>
-                                <tr>
-                                    <th>Base Term</th>
-                                    <th>Synonyms</th>
-                                    <th>Type</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {synonyms.map((syn) => (
-                                    <tr key={syn.base_term}>
-                                        <td><strong>{syn.base_term}</strong></td>
-                                        <td>{syn.synonyms.join(', ')}</td>
-                                        <td>{syn.one_way ? 'One-way' : 'Two-way'}</td>
-                                        <td>
-                                            <Button
-                                                variant="link"
-                                                isDestructive
-                                                onClick={() => deleteSynonym(syn.id)}
-                                            >
-                                                {window.overseekSearchAdmin.i18n.delete}
-                                            </Button>
-                                        </td>
+                <Card className="overseek-card bento-half">
+                    <CardHeader>
+                        <Heading level={3}>📚 Existing Synonyms</Heading>
+                    </CardHeader>
+                    <CardBody>
+                        {synonyms.length === 0 ? (
+                            <div className="overseek-empty-state">
+                                <span className="emoji">📝</span>
+                                <p>No synonyms configured yet</p>
+                            </div>
+                        ) : (
+                            <table className="overseek-table">
+                                <thead>
+                                    <tr>
+                                        <th>Base Term</th>
+                                        <th>Synonyms</th>
+                                        <th>Type</th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </CardBody>
-            </Card>
+                                </thead>
+                                <tbody>
+                                    {synonyms.map((syn) => (
+                                        <tr key={syn.base_term}>
+                                            <td><strong>{syn.base_term}</strong></td>
+                                            <td>{syn.synonyms.join(', ')}</td>
+                                            <td>{syn.one_way ? '→ One-way' : '↔ Two-way'}</td>
+                                            <td>
+                                                <Button
+                                                    variant="link"
+                                                    isDestructive
+                                                    onClick={() => deleteSynonym(syn.id)}
+                                                >
+                                                    🗑️ Delete
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </CardBody>
+                </Card>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Boosts Tab Component (NEW!)
+ */
+function BoostsTab() {
+    const [boosts, setBoosts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [notice, setNotice] = useState(null);
+    const [newProductId, setNewProductId] = useState('');
+    const [newQuery, setNewQuery] = useState('');
+    const [newType, setNewType] = useState('pin');
+    const [newWeight, setNewWeight] = useState(1.5);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        loadBoosts();
+    }, []);
+
+    const loadBoosts = async () => {
+        try {
+            const response = await apiFetch({ path: '/overseek-search/v1/boosts' });
+            setBoosts(response.boosts || []);
+        } catch (error) {
+            console.error('Failed to load boosts:', error);
+        }
+        setLoading(false);
+    };
+
+    const addBoost = async () => {
+        if (!newProductId) {
+            setNotice({ type: 'error', message: 'Please enter a product ID' });
+            return;
+        }
+
+        setSaving(true);
+        try {
+            await apiFetch({
+                path: '/overseek-search/v1/boosts',
+                method: 'POST',
+                data: {
+                    product_id: parseInt(newProductId),
+                    query_pattern: newQuery || null,
+                    boost_type: newType,
+                    boost_weight: newWeight,
+                },
+            });
+            setNewProductId('');
+            setNewQuery('');
+            setNewType('pin');
+            setNewWeight(1.5);
+            loadBoosts();
+            setNotice({ type: 'success', message: '✓ Boost rule added!' });
+        } catch (error) {
+            setNotice({ type: 'error', message: error.message || 'Failed to add boost' });
+        }
+        setSaving(false);
+    };
+
+    const deleteBoost = async (id) => {
+        if (!confirm('Delete this boost rule?')) return;
+
+        try {
+            await apiFetch({
+                path: `/overseek-search/v1/boosts/${id}`,
+                method: 'DELETE',
+            });
+            loadBoosts();
+        } catch (error) {
+            setNotice({ type: 'error', message: 'Failed to delete boost' });
+        }
+    };
+
+    const toggleBoost = async (id, isActive) => {
+        try {
+            await apiFetch({
+                path: `/overseek-search/v1/boosts/${id}/toggle`,
+                method: 'POST',
+                data: { is_active: !isActive },
+            });
+            loadBoosts();
+        } catch (error) {
+            setNotice({ type: 'error', message: 'Failed to toggle boost' });
+        }
+    };
+
+    if (loading) {
+        return <Spinner />;
+    }
+
+    return (
+        <div className="overseek-boosts">
+            {notice && (
+                <Notice
+                    status={notice.type}
+                    onRemove={() => setNotice(null)}
+                    isDismissible
+                >
+                    {notice.message}
+                </Notice>
+            )}
+
+            <div className="overseek-bento-grid">
+                <Card className="overseek-card bento-half card-pink">
+                    <CardHeader>
+                        <Heading level={3}>📌 Add Boost Rule</Heading>
+                    </CardHeader>
+                    <CardBody>
+                        <div className="overseek-synonym-form">
+                            <TextControl
+                                label="Product ID"
+                                type="number"
+                                value={newProductId}
+                                onChange={setNewProductId}
+                                placeholder="e.g., 1234"
+                                help="The WooCommerce product ID to boost"
+                            />
+                            <TextControl
+                                label="Query Pattern (optional)"
+                                value={newQuery}
+                                onChange={setNewQuery}
+                                placeholder="e.g., summer dress"
+                                help="Leave empty for global boost on all searches"
+                            />
+                            <SelectControl
+                                label="Boost Type"
+                                value={newType}
+                                onChange={setNewType}
+                                options={[
+                                    { label: '📌 Pin to Top', value: 'pin' },
+                                    { label: '🚀 Boost Relevance', value: 'boost' },
+                                ]}
+                            />
+                            {newType === 'boost' && (
+                                <RangeControl
+                                    label="Boost Multiplier"
+                                    value={newWeight}
+                                    onChange={setNewWeight}
+                                    min={1.1}
+                                    max={5}
+                                    step={0.1}
+                                />
+                            )}
+                            <Button
+                                variant="primary"
+                                onClick={addBoost}
+                                disabled={saving}
+                                isBusy={saving}
+                            >
+                                {saving ? '⏳ ADDING...' : '📌 ADD BOOST RULE'}
+                            </Button>
+                        </div>
+                    </CardBody>
+                </Card>
+
+                <Card className="overseek-card bento-half">
+                    <CardHeader>
+                        <Heading level={3}>📋 Active Boost Rules</Heading>
+                    </CardHeader>
+                    <CardBody>
+                        {boosts.length === 0 ? (
+                            <div className="overseek-empty-state">
+                                <span className="emoji">📌</span>
+                                <p>No boost rules configured yet</p>
+                            </div>
+                        ) : (
+                            <table className="overseek-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Query</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {boosts.map((boost) => (
+                                        <tr key={boost.id} style={{ opacity: boost.is_active ? 1 : 0.5 }}>
+                                            <td>
+                                                <strong>#{boost.product_id}</strong>
+                                                {boost.product_name && <><br /><small>{boost.product_name}</small></>}
+                                            </td>
+                                            <td>{boost.query_pattern || <em style={{ color: '#888' }}>All queries</em>}</td>
+                                            <td>{boost.boost_type === 'pin' ? '📌 Pin' : `🚀 ×${boost.boost_weight}`}</td>
+                                            <td>
+                                                <Button
+                                                    variant="link"
+                                                    onClick={() => toggleBoost(boost.id, boost.is_active)}
+                                                >
+                                                    {boost.is_active ? '✅ Active' : '⏸️ Paused'}
+                                                </Button>
+                                            </td>
+                                            <td>
+                                                <Button
+                                                    variant="link"
+                                                    isDestructive
+                                                    onClick={() => deleteBoost(boost.id)}
+                                                >
+                                                    🗑️
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </CardBody>
+                </Card>
+            </div>
         </div>
     );
 }
@@ -560,9 +816,10 @@ function AdminApp() {
     const { currentTab, i18n } = window.overseekSearchAdmin;
 
     const tabs = [
-        { name: 'settings', title: i18n.settings, className: 'overseek-tab' },
-        { name: 'analytics', title: i18n.analytics, className: 'overseek-tab' },
-        { name: 'synonyms', title: i18n.synonyms, className: 'overseek-tab' },
+        { name: 'settings', title: '⚙️ Settings', className: 'overseek-tab' },
+        { name: 'analytics', title: '📊 Analytics', className: 'overseek-tab' },
+        { name: 'synonyms', title: '🔗 Synonyms', className: 'overseek-tab' },
+        { name: 'boosts', title: '📌 Boosts', className: 'overseek-tab' },
     ];
 
     const renderTab = (tabName) => {
@@ -573,6 +830,8 @@ function AdminApp() {
                 return <AnalyticsTab />;
             case 'synonyms':
                 return <SynonymsTab />;
+            case 'boosts':
+                return <BoostsTab />;
             default:
                 return <SettingsTab />;
         }
@@ -580,10 +839,7 @@ function AdminApp() {
 
     return (
         <div className="overseek-admin-app">
-            <h1 className="overseek-admin-title">
-                <span className="dashicons dashicons-search"></span>
-                OverSeek Search
-            </h1>
+            <AdminHeader />
             <TabPanel
                 className="overseek-tab-panel"
                 activeClass="is-active"

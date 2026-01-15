@@ -8,7 +8,7 @@
  */
 
 // Prevent direct access.
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
     exit;
 }
 
@@ -17,18 +17,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Manages custom database tables for the plugin.
  */
-class Overseek_Search_Database {
+class Overseek_Search_Database
+{
 
     /**
      * Create all custom tables.
      */
-    public static function create_tables() {
+    public static function create_tables()
+    {
         global $wpdb;
-        
+
         $charset_collate = $wpdb->get_charset_collate();
-        
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        
+
         // Search index table with FULLTEXT support.
         $search_index_table = $wpdb->prefix . 'overseek_search_index';
         $sql_index = "CREATE TABLE $search_index_table (
@@ -36,6 +38,7 @@ class Overseek_Search_Database {
             product_id BIGINT UNSIGNED NOT NULL,
             title VARCHAR(255) NOT NULL DEFAULT '',
             sku VARCHAR(100) NOT NULL DEFAULT '',
+            variation_skus TEXT,
             description TEXT,
             short_description TEXT,
             categories TEXT,
@@ -46,17 +49,19 @@ class Overseek_Search_Database {
             stock_status VARCHAR(20) DEFAULT 'instock',
             image_url VARCHAR(500) DEFAULT '',
             search_content TEXT,
+            language VARCHAR(10) DEFAULT NULL,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY idx_product_id (product_id),
+            KEY idx_language (language),
             FULLTEXT KEY ft_search (title, sku, search_content),
             FULLTEXT KEY ft_title (title),
             FULLTEXT KEY ft_sku (sku),
             FULLTEXT KEY ft_content (search_content)
         ) $charset_collate ENGINE=InnoDB;";
-        
-        dbDelta( $sql_index );
-        
+
+        dbDelta($sql_index);
+
         // Analytics table.
         $analytics_table = $wpdb->prefix . 'overseek_search_analytics';
         $sql_analytics = "CREATE TABLE $analytics_table (
@@ -74,9 +79,9 @@ class Overseek_Search_Database {
             KEY idx_created (created_at),
             KEY idx_session (session_id)
         ) $charset_collate;";
-        
-        dbDelta( $sql_analytics );
-        
+
+        dbDelta($sql_analytics);
+
         // Synonyms table.
         $synonyms_table = $wpdb->prefix . 'overseek_search_synonyms';
         $sql_synonyms = "CREATE TABLE $synonyms_table (
@@ -89,9 +94,28 @@ class Overseek_Search_Database {
             PRIMARY KEY (id),
             UNIQUE KEY idx_base_term (base_term)
         ) $charset_collate;";
-        
-        dbDelta( $sql_synonyms );
-        
+
+        dbDelta($sql_synonyms);
+
+        // Boosts table for search merchandising.
+        $boosts_table = $wpdb->prefix . 'overseek_search_boosts';
+        $sql_boosts = "CREATE TABLE $boosts_table (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            product_id BIGINT UNSIGNED NOT NULL,
+            query_pattern VARCHAR(255) DEFAULT NULL,
+            boost_type ENUM('pin', 'boost') DEFAULT 'boost',
+            boost_weight DECIMAL(5,2) DEFAULT 1.50,
+            is_active TINYINT(1) DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_query (query_pattern(100)),
+            KEY idx_product (product_id),
+            KEY idx_active (is_active)
+        ) $charset_collate;";
+
+        dbDelta($sql_boosts);
+
         // Ensure indexes exist (dbDelta doesn't always add indexes to existing tables).
         self::ensure_indexes();
     }
@@ -101,31 +125,45 @@ class Overseek_Search_Database {
      * 
      * dbDelta() may not create indexes on existing tables, so we add them manually.
      */
-    public static function ensure_indexes() {
+    public static function ensure_indexes()
+    {
         global $wpdb;
-        
-        $table = $wpdb->prefix . 'overseek_search_index';
-        
+
+        // Validate table name against known value to prevent injection.
+        $table = self::get_index_table();
+        $expected_table = $wpdb->prefix . 'overseek_search_index';
+
+        if ($table !== $expected_table) {
+            return; // Safety check - table name doesn't match expected pattern.
+        }
+
+        // Escape table name for use in queries.
+        $safe_table = esc_sql($table);
+
         // Check and add individual FULLTEXT indexes if they don't exist.
         $indexes = array(
-            'ft_title'   => 'title',
-            'ft_sku'     => 'sku',
+            'ft_title' => 'title',
+            'ft_sku' => 'sku',
             'ft_content' => 'search_content',
         );
-        
-        foreach ( $indexes as $index_name => $column ) {
+
+        foreach ($indexes as $index_name => $column) {
+            // Validate index name and column against whitelist.
+            $safe_index = esc_sql($index_name);
+            $safe_column = esc_sql($column);
+
             // Check if index exists.
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $existing = $wpdb->get_row(
                 $wpdb->prepare(
-                    "SHOW INDEX FROM $table WHERE Key_name = %s",
+                    "SHOW INDEX FROM `{$safe_table}` WHERE Key_name = %s",
                     $index_name
                 )
             );
-            
-            if ( ! $existing ) {
+
+            if (!$existing) {
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-                $wpdb->query( "ALTER TABLE $table ADD FULLTEXT INDEX $index_name ($column)" );
+                $wpdb->query("ALTER TABLE `{$safe_table}` ADD FULLTEXT INDEX `{$safe_index}` (`{$safe_column}`)");
             }
         }
     }
@@ -134,15 +172,18 @@ class Overseek_Search_Database {
      * Drop all custom tables.
      * Used during uninstall.
      */
-    public static function drop_tables() {
+    public static function drop_tables()
+    {
         global $wpdb;
-        
+
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}overseek_search_index" );
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}overseek_search_index");
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}overseek_search_analytics" );
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}overseek_search_analytics");
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}overseek_search_synonyms" );
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}overseek_search_synonyms");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}overseek_search_boosts");
     }
 
     /**
@@ -150,7 +191,8 @@ class Overseek_Search_Database {
      *
      * @return string
      */
-    public static function get_index_table() {
+    public static function get_index_table()
+    {
         global $wpdb;
         return $wpdb->prefix . 'overseek_search_index';
     }
@@ -160,7 +202,8 @@ class Overseek_Search_Database {
      *
      * @return string
      */
-    public static function get_analytics_table() {
+    public static function get_analytics_table()
+    {
         global $wpdb;
         return $wpdb->prefix . 'overseek_search_analytics';
     }
@@ -170,8 +213,20 @@ class Overseek_Search_Database {
      *
      * @return string
      */
-    public static function get_synonyms_table() {
+    public static function get_synonyms_table()
+    {
         global $wpdb;
         return $wpdb->prefix . 'overseek_search_synonyms';
+    }
+
+    /**
+     * Get the boosts table name.
+     *
+     * @return string
+     */
+    public static function get_boosts_table()
+    {
+        global $wpdb;
+        return $wpdb->prefix . 'overseek_search_boosts';
     }
 }

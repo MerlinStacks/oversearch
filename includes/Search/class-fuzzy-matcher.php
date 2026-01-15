@@ -8,7 +8,7 @@
  */
 
 // Prevent direct access.
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
     exit;
 }
 
@@ -17,7 +17,33 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Provides fuzzy string matching for typo tolerance.
  */
-class Overseek_Search_Fuzzy_Matcher {
+class Overseek_Search_Fuzzy_Matcher
+{
+
+    /**
+     * Minimum word length to consider for matching.
+     */
+    const MIN_WORD_LENGTH = 3;
+
+    /**
+     * Minimum word length for trigram similarity checks.
+     */
+    const MIN_TRIGRAM_LENGTH = 4;
+
+    /**
+     * Trigram similarity threshold (0-1 scale, higher = stricter).
+     */
+    const TRIGRAM_THRESHOLD = 0.4;
+
+    /**
+     * Maximum length difference before skipping distance calculation.
+     */
+    const MAX_LENGTH_DIFF = 3;
+
+    /**
+     * Default Levenshtein distance threshold.
+     */
+    const DEFAULT_THRESHOLD = 2;
 
     /**
      * Find fuzzy matches for a query against a list of candidates.
@@ -27,40 +53,41 @@ class Overseek_Search_Fuzzy_Matcher {
      * @param int    $threshold  Maximum Levenshtein distance (default: 2).
      * @return array Matched strings sorted by similarity.
      */
-    public function find_matches( $query, $candidates, $threshold = 2 ) {
-        $query   = strtolower( trim( $query ) );
+    public function find_matches($query, $candidates, $threshold = 2)
+    {
+        $query = strtolower(trim($query));
         $matches = array();
-        
-        foreach ( $candidates as $candidate ) {
-            $candidate_lower = strtolower( $candidate );
-            
+
+        foreach ($candidates as $candidate) {
+            $candidate_lower = strtolower($candidate);
+
             // Check each word in the query against the candidate.
-            $query_words = preg_split( '/\s+/', $query );
-            
-            foreach ( $query_words as $word ) {
-                if ( strlen( $word ) < 3 ) {
+            $query_words = preg_split('/\s+/', $query);
+
+            foreach ($query_words as $word) {
+                if (strlen($word) < self::MIN_WORD_LENGTH) {
                     continue;
                 }
-                
+
                 // Check if any word in the candidate is similar.
-                $candidate_words = preg_split( '/\s+/', $candidate_lower );
-                
-                foreach ( $candidate_words as $cword ) {
-                    $distance = $this->calculate_distance( $word, $cword );
-                    
-                    if ( $distance <= $threshold ) {
-                        $matches[ $candidate ] = isset( $matches[ $candidate ] )
-                            ? min( $matches[ $candidate ], $distance )
+                $candidate_words = preg_split('/\s+/', $candidate_lower);
+
+                foreach ($candidate_words as $cword) {
+                    $distance = $this->calculate_distance($word, $cword);
+
+                    if ($distance <= $threshold) {
+                        $matches[$candidate] = isset($matches[$candidate])
+                            ? min($matches[$candidate], $distance)
                             : $distance;
                         break 2;
                     }
-                    
+
                     // Also check trigram similarity for longer words.
-                    if ( strlen( $word ) >= 4 && strlen( $cword ) >= 4 ) {
-                        $similarity = $this->trigram_similarity( $word, $cword );
-                        if ( $similarity >= 0.4 ) {
-                            $matches[ $candidate ] = isset( $matches[ $candidate ] )
-                                ? min( $matches[ $candidate ], 1 )
+                    if (strlen($word) >= self::MIN_TRIGRAM_LENGTH && strlen($cword) >= self::MIN_TRIGRAM_LENGTH) {
+                        $similarity = $this->trigram_similarity($word, $cword);
+                        if ($similarity >= self::TRIGRAM_THRESHOLD) {
+                            $matches[$candidate] = isset($matches[$candidate])
+                                ? min($matches[$candidate], 1)
                                 : 1;
                             break 2;
                         }
@@ -68,11 +95,11 @@ class Overseek_Search_Fuzzy_Matcher {
                 }
             }
         }
-        
+
         // Sort by distance (lower is better).
-        asort( $matches );
-        
-        return array_keys( $matches );
+        asort($matches);
+
+        return array_keys($matches);
     }
 
     /**
@@ -84,25 +111,26 @@ class Overseek_Search_Fuzzy_Matcher {
      * @param string $str2 Second string.
      * @return int Levenshtein distance.
      */
-    private function calculate_distance( $str1, $str2 ) {
+    private function calculate_distance($str1, $str2)
+    {
         // Quick checks for efficiency.
-        if ( $str1 === $str2 ) {
+        if ($str1 === $str2) {
             return 0;
         }
-        
-        $len1 = strlen( $str1 );
-        $len2 = strlen( $str2 );
-        
+
+        $len1 = strlen($str1);
+        $len2 = strlen($str2);
+
         // If length difference is too large, skip detailed calculation.
-        if ( abs( $len1 - $len2 ) > 3 ) {
+        if (abs($len1 - $len2) > 3) {
             return 100;
         }
-        
+
         // Use PHP's native levenshtein (limited to 255 chars).
-        if ( $len1 <= 255 && $len2 <= 255 ) {
-            return levenshtein( $str1, $str2 );
+        if ($len1 <= 255 && $len2 <= 255) {
+            return levenshtein($str1, $str2);
         }
-        
+
         // Fallback for very long strings (shouldn't happen for product titles).
         return 100;
     }
@@ -116,18 +144,19 @@ class Overseek_Search_Fuzzy_Matcher {
      * @param string $str2 Second string.
      * @return float Similarity score between 0 and 1.
      */
-    private function trigram_similarity( $str1, $str2 ) {
-        $trigrams1 = $this->get_trigrams( $str1 );
-        $trigrams2 = $this->get_trigrams( $str2 );
-        
-        if ( empty( $trigrams1 ) || empty( $trigrams2 ) ) {
+    private function trigram_similarity($str1, $str2)
+    {
+        $trigrams1 = $this->get_trigrams($str1);
+        $trigrams2 = $this->get_trigrams($str2);
+
+        if (empty($trigrams1) || empty($trigrams2)) {
             return 0;
         }
-        
-        $intersection = array_intersect( $trigrams1, $trigrams2 );
-        $union        = array_unique( array_merge( $trigrams1, $trigrams2 ) );
-        
-        return count( $intersection ) / count( $union );
+
+        $intersection = array_intersect($trigrams1, $trigrams2);
+        $union = array_unique(array_merge($trigrams1, $trigrams2));
+
+        return count($intersection) / count($union);
     }
 
     /**
@@ -136,15 +165,16 @@ class Overseek_Search_Fuzzy_Matcher {
      * @param string $str The input string.
      * @return array Array of trigrams.
      */
-    private function get_trigrams( $str ) {
-        $str      = strtolower( trim( $str ) );
+    private function get_trigrams($str)
+    {
+        $str = strtolower(trim($str));
         $trigrams = array();
-        $len      = strlen( $str );
-        
-        for ( $i = 0; $i <= $len - 3; $i++ ) {
-            $trigrams[] = substr( $str, $i, 3 );
+        $len = strlen($str);
+
+        for ($i = 0; $i <= $len - 3; $i++) {
+            $trigrams[] = substr($str, $i, 3);
         }
-        
+
         return $trigrams;
     }
 
@@ -155,21 +185,22 @@ class Overseek_Search_Fuzzy_Matcher {
      * @param array  $dictionary List of known correct terms.
      * @return string|null Suggested correction or null.
      */
-    public function suggest_correction( $query, $dictionary ) {
-        $query       = strtolower( trim( $query ) );
-        $best_match  = null;
-        $best_score  = PHP_INT_MAX;
-        
-        foreach ( $dictionary as $term ) {
-            $term_lower = strtolower( $term );
-            $distance   = $this->calculate_distance( $query, $term_lower );
-            
-            if ( $distance < $best_score && $distance <= 2 && $distance > 0 ) {
+    public function suggest_correction($query, $dictionary)
+    {
+        $query = strtolower(trim($query));
+        $best_match = null;
+        $best_score = PHP_INT_MAX;
+
+        foreach ($dictionary as $term) {
+            $term_lower = strtolower($term);
+            $distance = $this->calculate_distance($query, $term_lower);
+
+            if ($distance < $best_score && $distance <= 2 && $distance > 0) {
                 $best_score = $distance;
                 $best_match = $term;
             }
         }
-        
+
         return $best_match;
     }
 }

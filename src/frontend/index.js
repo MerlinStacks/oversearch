@@ -4,6 +4,8 @@
  * Dropdown-style instant search with history, suggestions, and caching.
  */
 
+/* Did you mean styling is in frontend.css */
+
 import { createRoot, useState, useEffect, useRef, useCallback } from '@wordpress/element';
 import './frontend.css';
 
@@ -293,6 +295,7 @@ function SearchDropdown() {
     const [history, setHistory] = useState([]);
     const [recentProducts, setRecentProducts] = useState([]);
     const [isMobile, setIsMobile] = useState(false);
+    const [didYouMean, setDidYouMean] = useState(null);
 
     const inputRef = useRef(null);
     const dropdownRef = useRef(null);
@@ -378,16 +381,19 @@ function SearchDropdown() {
         const cached = getCachedResults(debouncedQuery);
         if (cached) {
             setResults(cached.results || []);
+            setDidYouMean(cached.did_you_mean || null);
             return;
         }
 
         setLoading(true);
+        setDidYouMean(null);
         try {
             const params = new URLSearchParams({ q: debouncedQuery, per_page: maxResults });
             const response = await fetch(`${apiUrl}/search?${params}`);
             const data = await response.json();
 
             setResults(data.results || []);
+            setDidYouMean(data.did_you_mean || null);
             setCachedResults(debouncedQuery, data);
 
             if (data.results?.length > 0) {
@@ -397,6 +403,7 @@ function SearchDropdown() {
         } catch (err) {
             console.error('Search error:', err);
             setResults([]);
+            setDidYouMean(null);
         }
         setLoading(false);
     };
@@ -422,6 +429,7 @@ function SearchDropdown() {
     const handleClearHistory = () => { clearHistory(); setHistory([]); };
     const handleProductClick = () => setIsOpen(false);
     const handleSuggestionClick = (term) => { setQuery(term); inputRef.current?.focus(); };
+    const handleDidYouMeanClick = (term) => { setQuery(term); setDidYouMean(null); inputRef.current?.focus(); };
 
     const showHistory = isOpen && query.length < 2 && history.length > 0;
     const showPopular = isOpen && query.length < 2 && history.length === 0 && popular.length > 0;
@@ -429,6 +437,7 @@ function SearchDropdown() {
     const showResults = isOpen && query.length >= 2;
     const showSuggestions = showResults && suggestions.length > 0;
     const showNoResults = showResults && !loading && results.length === 0;
+    const showDidYouMean = showResults && !loading && didYouMean && results.length <= 3;
     const showDropdown = showHistory || showPopular || showRecent || showResults;
 
     const viewAllUrl = `/?s=${encodeURIComponent(query)}&post_type=product`;
@@ -510,6 +519,12 @@ function SearchDropdown() {
                             </>
                         )}
                         {showNoResults && <div className="overseek-dropdown__empty">{i18n?.noResults || 'No products found'}</div>}
+                        {showDidYouMean && (
+                            <div className="overseek-dropdown__did-you-mean">
+                                <span>{i18n?.didYouMean || 'Did you mean:'}</span>
+                                <button type="button" onClick={() => handleDidYouMeanClick(didYouMean)}>{didYouMean}</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -592,6 +607,12 @@ function SearchDropdown() {
                     )}
 
                     {showNoResults && <div className="overseek-dropdown__empty">{i18n?.noResults || 'No products found'}</div>}
+                    {showDidYouMean && (
+                        <div className="overseek-dropdown__did-you-mean">
+                            <span>{i18n?.didYouMean || 'Did you mean:'}</span>
+                            <button type="button" onClick={() => handleDidYouMeanClick(didYouMean)}>{didYouMean}</button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
