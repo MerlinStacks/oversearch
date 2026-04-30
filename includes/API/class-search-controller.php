@@ -147,19 +147,33 @@ class Overseek_Search_Search_Controller
             $page = $request->get_param('page');
             $per_page = $request->get_param('per_page');
 
-            // Rate limiting via transients (10 searches per minute per IP).
+            // Rate limiting via transients (60 searches per minute per IP).
+            // Note: Transients have a race condition but provide good enough protection for most use cases.
             $ip_hash = md5($this->get_client_ip());
             $rate_key = 'overseek_rate_' . $ip_hash;
-            $rate_count = (int) get_transient($rate_key);
 
-            if ($rate_count >= 60) {
+            // Use atomic increment via wp_cache_incr if available, otherwise use transient.
+            $rate_count = wp_cache_incr($rate_key, 1, 'overseek_rate');
+            if (false === $rate_count) {
+                // Cache not available, use transient with increased initial count.
+                $rate_count = (int) get_transient($rate_key);
+                if ($rate_count >= 60) {
+                    return new WP_REST_Response(
+                        array('error' => 'Rate limit exceeded. Please try again later.'),
+                        429
+                    );
+                }
+                set_transient($rate_key, $rate_count + 1, MINUTE_IN_SECONDS);
+            } elseif ($rate_count > 60) {
                 return new WP_REST_Response(
                     array('error' => 'Rate limit exceeded. Please try again later.'),
                     429
                 );
             }
-
-            set_transient($rate_key, $rate_count + 1, MINUTE_IN_SECONDS);
+            // Set expiration on first increment.
+            if (1 === $rate_count) {
+                wp_cache_set($rate_key, $rate_count, 'overseek_rate', MINUTE_IN_SECONDS);
+            }
 
             // Execute search.
             $engine = new Overseek_Search_Engine();
@@ -319,9 +333,14 @@ class Overseek_Search_Search_Controller
     private function get_session_id()
     {
         if (isset($_COOKIE['overseek_sid'])) {
-            return sanitize_text_field(wp_unslash($_COOKIE['overseek_sid']));
+            $sid = sanitize_text_field(wp_unslash($_COOKIE['overseek_sid']));
+            if (preg_match('/^[a-f0-9]{32}$/', $sid)) {
+                return $sid;
+            }
         }
-        return md5($this->get_client_ip() . time());
+        $new_sid = md5($this->get_client_ip() . time() . wp_rand());
+        setcookie('overseek_sid', $new_sid, time() + DAY_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
+        return $new_sid;
     }
 
     /**

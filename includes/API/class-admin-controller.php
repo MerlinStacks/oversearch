@@ -184,7 +184,16 @@ class Overseek_Search_Admin_Controller {
         $int_fields = array( 'fuzzy_threshold', 'results_per_page', 'title_weight', 'sku_weight', 'description_weight' );
         foreach ( $int_fields as $field ) {
             if ( isset( $new_settings[ $field ] ) ) {
-                $sanitized[ $field ] = absint( $new_settings[ $field ] );
+                $value = absint( $new_settings[ $field ] );
+                // Validate ranges.
+                if ( 'fuzzy_threshold' === $field ) {
+                    $value = max( 1, min( 3, $value ) );
+                } elseif ( 'results_per_page' === $field ) {
+                    $value = max( 1, min( 50, $value ) );
+                } elseif ( in_array( $field, array( 'title_weight', 'sku_weight', 'description_weight' ), true ) ) {
+                    $value = max( 1, min( 10, $value ) );
+                }
+                $sanitized[ $field ] = $value;
             }
         }
         

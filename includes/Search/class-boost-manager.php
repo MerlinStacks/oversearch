@@ -69,6 +69,12 @@ class Overseek_Boost_Manager
     {
         global $wpdb;
 
+        $cache_key = self::CACHE_KEY_GLOBAL . '_' . md5($query);
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            return $cached;
+        }
+
         $table = self::get_table_name();
         $query_lower = strtolower(trim($query));
 
@@ -86,7 +92,10 @@ class Overseek_Boost_Manager
             ARRAY_A
         );
 
-        return $results ?: array();
+        $results = $results ?: array();
+        set_transient($cache_key, $results, self::CACHE_TTL);
+
+        return $results;
     }
 
     /**
@@ -319,8 +328,12 @@ class Overseek_Boost_Manager
 
         // Sort pinned by their order in pinned_id_list.
         usort($pinned_results, function ($a, $b) use ($pinned_id_list) {
-            $a_pos = array_search($this->get_product_id($a), $pinned_id_list);
-            $b_pos = array_search($this->get_product_id($b), $pinned_id_list);
+            $a_id = $this->get_product_id($a);
+            $b_id = $this->get_product_id($b);
+            $a_pos = array_search($a_id, $pinned_id_list);
+            $b_pos = array_search($b_id, $pinned_id_list);
+            $a_pos = ($a_pos !== false) ? $a_pos : PHP_INT_MAX;
+            $b_pos = ($b_pos !== false) ? $b_pos : PHP_INT_MAX;
             return $a_pos - $b_pos;
         });
 

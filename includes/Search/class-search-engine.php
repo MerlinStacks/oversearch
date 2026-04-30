@@ -233,6 +233,16 @@ class Overseek_Search_Engine
             }
         }
 
+        // If no valid terms, return a dummy search that won't match anything.
+        if (empty($terms)) {
+            return '"___no_match___"';
+        }
+
+        // If no valid terms, return a dummy search that won't match anything.
+        if (empty($terms)) {
+            return '"___no_match___"';
+        }
+
         return implode(' ', $terms);
     }
 
@@ -254,7 +264,7 @@ class Overseek_Search_Engine
 
         // Get all indexed titles for fuzzy matching.
         $candidates = $wpdb->get_results(
-            "SELECT DISTINCT title FROM $table LIMIT 1000",
+            $wpdb->prepare("SELECT DISTINCT title FROM {$table} LIMIT %d", 1000),
             ARRAY_A
         );
 
@@ -387,6 +397,7 @@ class Overseek_Search_Engine
      */
     private function highlight_matches($text, $query)
     {
+        $text = wp_strip_all_tags($text);
         $words = preg_split('/\s+/', $query);
 
         foreach ($words as $word) {

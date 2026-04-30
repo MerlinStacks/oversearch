@@ -245,17 +245,22 @@ class Overseek_Search_Index
     {
         global $wpdb;
 
-        // Clear existing index.
         $table = Overseek_Search_Database::get_index_table();
+
+        // Use transaction for safety - if something fails, we can rollback.
+        $wpdb->query('START TRANSACTION');
+
+        // Clear existing index only after starting transaction.
         $wpdb->query("TRUNCATE TABLE $table");
 
-        // Get all published products.
+        // Get all published products (excluding variations - only index parent products).
         $args = array(
             'status' => 'publish',
             'limit' => -1,
             'orderby' => 'ID',
             'order' => 'ASC',
             'return' => 'ids',
+            'type' => array( 'simple', 'variable', 'grouped', 'external' ),
         );
 
         $product_ids = wc_get_products($args);
@@ -276,6 +281,11 @@ class Overseek_Search_Index
                 $progress_callback($index + 1, $total, $product_id);
             }
         }
+
+        $wpdb->query('COMMIT');
+
+        // Clear caches after rebuild.
+        wp_cache_flush_group('overseek_search');
 
         return array(
             'total' => $total,

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="OverSeek Search">
+    <description>PHP coding standards for OverSeek Search plugin</description>
+
+    <!-- Scan all plugin files -->
+    <file>.</file>
+
+    <!-- Exclude vendor and node_modules -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/build/*</exclude-pattern>
+    <exclude-pattern>*/tests/*</exclude-pattern>
+    <exclude-pattern>*.asset.php</exclude-pattern>
+
+    <!-- Use WordPress coding standards -->
+    <rule ref="WordPress-Core">
+        <!-- Allow short array syntax (PHP 7.4+) -->
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax" />
+    </rule>
+
+    <rule ref="WordPress-Docs">
+        <exclude name="Squiz.Commenting.ClassComment.Missing" />
+    </rule>
+
+    <rule ref="WordPress-Extra"/>
+
+    <!-- PHP minimum version -->
+    <rule ref="PHPCompatibilityWP"/>
+    <config name="testVersion" value="8.0-"/>
+
+    <!-- Set minimum supported WP version -->
+    <config name="minimum_supported_wp_version" value="6.0"/>
+
+    <!-- Strip file comments -->
+    <rule ref="Squiz.Commenting.FileComment.SpacingAfterOpen">
+        <exclude name="Squiz.Commenting.FileComment.SpacingAfterOpen"/>
+    </rule>
+</ruleset>

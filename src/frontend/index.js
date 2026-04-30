@@ -6,7 +6,7 @@
 
 /* Did you mean styling is in frontend.css */
 
-import { createRoot, useState, useEffect, useRef, useCallback } from '@wordpress/element';
+import { createRoot, useState, useEffect, useRef, useCallback, Component } from '@wordpress/element';
 import './frontend.css';
 
 const { apiUrl, maxDropdownResults, replaceSearch, initialQuery, currency, i18n } = window.overseekSearch || {};
@@ -20,62 +20,37 @@ const MAX_RECENT = 5;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Decode HTML entities (e.g., &#36; -> $).
+ * React Error Boundary for Search Dropdown.
+ * Catches render errors and prevents them from crashing the page.
  */
-function decodeHtmlEntities(str) {
-    if (!str) return str;
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = str;
-    return textarea.value;
-}
+class SearchErrorBoundary extends Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+    }
 
-/**
- * Debounce hook for search input.
- */
-function useDebounce(value, delay) {
-    const [debouncedValue, setDebouncedValue] = useState(value);
+    static getDerivedStateFromError(error) {
+        return { hasError: true };
+    }
 
-    useEffect(() => {
-        const handler = setTimeout(() => setDebouncedValue(value), delay);
-        return () => clearTimeout(handler);
-    }, [value, delay]);
+    componentDidCatch(error, errorInfo) {
+        console.error('OverSeek Search error:', error, errorInfo);
+    }
 
-    return debouncedValue;
-}
-
-/**
- * Format price according to WooCommerce settings.
- */
-function formatPrice(price) {
-    if (!price && price !== 0) return '';
-    const formatted = parseFloat(price).toFixed(currency?.decimals || 2);
-    const symbol = decodeHtmlEntities(currency?.symbol || '$');
-
-    switch (currency?.position) {
-        case 'left': return `${symbol}${formatted}`;
-        case 'right': return `${formatted}${symbol}`;
-        case 'left_space': return `${symbol} ${formatted}`;
-        case 'right_space': return `${formatted} ${symbol}`;
-        default: return `${symbol}${formatted}`;
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="overseek-search-wrapper">
+                    <div className="overseek-search-error">
+                        <p>{i18n?.noResults || 'Something went wrong. Please refresh the page.'}</p>
+                    </div>
+                </div>
+            );
+        }
+        return this.props.children;
     }
 }
 
-// ============================================
-// LOCAL STORAGE HELPERS
-// ============================================
-
-function getHistory() {
-    try {
-        return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    } catch { return []; }
-}
-
-function saveToHistory(term) {
-    if (!term || term.length < 2) return;
-    try {
-        let history = getHistory().filter(h => h.toLowerCase() !== term.toLowerCase());
-        history.unshift(term);
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
     } catch { }
 }
 
@@ -297,6 +272,8 @@ function SearchDropdown() {
     const [isMobile, setIsMobile] = useState(false);
     const [didYouMean, setDidYouMean] = useState(null);
 
+    const [activeIndex, setActiveIndex] = useState(-1);
+
     const inputRef = useRef(null);
     const dropdownRef = useRef(null);
     const debouncedQuery = useDebounce(query, 300);
@@ -352,17 +329,56 @@ function SearchDropdown() {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    // Keyboard: Escape to close.
+    // Keyboard navigation inside dropdown.
     useEffect(() => {
+        if (!isOpen) return;
+
+        const selectable = dropdownRef.current?.querySelectorAll('[role="option"]');
+        if (!selectable || selectable.length === 0) return;
+
         const handleKey = (e) => {
+            if (['ArrowDown', 'ArrowUp', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
+                e.preventDefault();
+            }
+
             if (e.key === 'Escape') {
                 setIsOpen(false);
-                inputRef.current?.blur();
+                inputRef.current?.focus();
+                return;
+            }
+
+            if (e.key === 'ArrowDown') {
+                setActiveIndex(prev => (prev + 1) % selectable.length);
+                selectable[(activeIndex + 1) % selectable.length]?.focus();
+                return;
+            }
+
+            if (e.key === 'ArrowUp') {
+                setActiveIndex(prev => (prev - 1 + selectable.length) % selectable.length);
+                selectable[(activeIndex - 1 + selectable.length) % selectable.length]?.focus();
+                return;
+            }
+
+            if (e.key === 'Enter') {
+                const focused = document.activeElement;
+                if (focused && focused.tagName === 'A') {
+                    window.location.href = focused.href;
+                } else if (focused && focused.click) {
+                    focused.click();
+                }
+                return;
+            }
+
+            if (e.key === 'Tab') {
+                // Allow tab to leave the dropdown naturally.
+                setIsOpen(false);
+                return;
             }
         };
-        document.addEventListener('keydown', handleKey);
-        return () => document.removeEventListener('keydown', handleKey);
-    }, []);
+
+        dropdownRef.current?.addEventListener('keydown', handleKey);
+        return () => dropdownRef.current?.removeEventListener('keydown', handleKey);
+    }, [isOpen, activeIndex]);
 
     // Bind to PHP-rendered triggers.
     useEffect(() => {
@@ -376,7 +392,16 @@ function SearchDropdown() {
         return () => triggers.forEach(t => t.removeEventListener('click', handleClick));
     }, []);
 
+    const abortControllerRef = useRef(null);
+
     const performSearch = async () => {
+        // Cancel previous request if still pending.
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
         // Check cache first.
         const cached = getCachedResults(debouncedQuery);
         if (cached) {
@@ -389,7 +414,9 @@ function SearchDropdown() {
         setDidYouMean(null);
         try {
             const params = new URLSearchParams({ q: debouncedQuery, per_page: maxResults });
-            const response = await fetch(`${apiUrl}/search?${params}`);
+            const response = await fetch(`${apiUrl}/search?${params}`, {
+                signal: abortController.signal
+            });
             const data = await response.json();
 
             setResults(data.results || []);
@@ -401,25 +428,37 @@ function SearchDropdown() {
                 setHistory(getHistory());
             }
         } catch (err) {
-            console.error('Search error:', err);
-            setResults([]);
-            setDidYouMean(null);
+            if (err.name !== 'AbortError') {
+                console.error('Search error:', err);
+                setResults([]);
+                setDidYouMean(null);
+            }
         }
         setLoading(false);
     };
 
     const fetchSuggestions = async () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
         try {
             const params = new URLSearchParams({ q: debouncedQuery, limit: 5 });
-            const response = await fetch(`${apiUrl}/suggest?${params}`);
+            const response = await fetch(`${apiUrl}/suggest?${params}`, {
+                signal: abortController.signal
+            });
             const data = await response.json();
             // Filter out exact matches to query.
             const filtered = (data.suggestions || []).filter(
                 s => s.toLowerCase() !== debouncedQuery.toLowerCase()
             );
             setSuggestions(filtered);
-        } catch {
-            setSuggestions([]);
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                setSuggestions([]);
+            }
         }
     };
 
@@ -485,8 +524,8 @@ function SearchDropdown() {
                                     <button type="button" onClick={handleClearHistory}>{i18n?.clear || 'Clear'}</button>
                                 </div>
                                 <div className="overseek-dropdown__history">
-                                    {history.map((term, idx) => (
-                                        <HistoryItem key={idx} term={term} onClick={() => handleHistoryClick(term)} onDelete={() => handleHistoryDelete(term)} />
+                                    {history.map((term) => (
+                                        <HistoryItem key={term} term={term} onClick={() => handleHistoryClick(term)} onDelete={() => handleHistoryDelete(term)} />
                                     ))}
                                 </div>
                             </div>
@@ -495,8 +534,8 @@ function SearchDropdown() {
                             <div className="overseek-dropdown__section">
                                 <div className="overseek-dropdown__section-header"><span>Popular Searches</span></div>
                                 <div className="overseek-dropdown__history">
-                                    {popular.map((term, idx) => (
-                                        <HistoryItem key={idx} term={term} onClick={() => handleHistoryClick(term)} onDelete={() => { }} />
+                                    {popular.map((term) => (
+                                        <HistoryItem key={term} term={term} onClick={() => handleHistoryClick(term)} onDelete={() => { }} />
                                     ))}
                                 </div>
                             </div>
@@ -508,8 +547,8 @@ function SearchDropdown() {
                                 </div>
                                 {showSuggestions && (
                                     <div className="overseek-dropdown__suggestions">
-                                        {suggestions.map((term, idx) => (
-                                            <SuggestionItem key={idx} term={term} onClick={() => handleSuggestionClick(term)} />
+                                        {suggestions.map((term) => (
+                                            <SuggestionItem key={term} term={term} onClick={() => handleSuggestionClick(term)} />
                                         ))}
                                     </div>
                                 )}
@@ -627,10 +666,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inlineContainers.length > 0) {
         inlineContainers.forEach((container) => {
             const root = createRoot(container);
-            root.render(<SearchDropdown />);
+            root.render(
+                <SearchErrorBoundary>
+                    <SearchDropdown />
+                </SearchErrorBoundary>
+            );
         });
     } else if (footerRoot) {
         const root = createRoot(footerRoot);
-        root.render(<SearchDropdown />);
+        root.render(
+            <SearchErrorBoundary>
+                <SearchDropdown />
+            </SearchErrorBoundary>
+        );
+    }
+});
+    } else if (footerRoot) {
+        const root = createRoot(footerRoot);
+        root.render(
+            <SearchErrorBoundary>
+                <SearchDropdown />
+            </SearchErrorBoundary>
+        );
     }
 });

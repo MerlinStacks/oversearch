@@ -146,6 +146,12 @@ class Overseek_Boosts_Controller
             return new WP_Error('missing_product_id', 'Product ID is required', array('status' => 400));
         }
 
+        // Validate product exists.
+        $product = wc_get_product($product_id);
+        if (!$product) {
+            return new WP_Error('invalid_product', 'Product does not exist', array('status' => 400));
+        }
+
         $result = $this->boost_manager->add_boost($product_id, $boost_type, $boost_weight, $query_pattern);
 
         if (is_wp_error($result)) {

@@ -46,6 +46,15 @@ class Overseek_Search_Fuzzy_Matcher
     const DEFAULT_THRESHOLD = 2;
 
     /**
+     * Get the minimum word length (filterable).
+     *
+     * @return int
+     */
+    private function get_min_word_length() {
+        return apply_filters('overseek_fuzzy_min_word_length', self::MIN_WORD_LENGTH);
+    }
+
+    /**
      * Find fuzzy matches for a query against a list of candidates.
      *
      * @param string $query      The search query.
@@ -58,16 +67,19 @@ class Overseek_Search_Fuzzy_Matcher
         $query = strtolower(trim($query));
         $matches = array();
 
+        // Get filterable minimum word length.
+        $min_word_length = apply_filters('overseek_fuzzy_min_word_length', self::MIN_WORD_LENGTH);
+
         foreach ($candidates as $candidate) {
             $candidate_lower = strtolower($candidate);
 
             // Check each word in the query against the candidate.
             $query_words = preg_split('/\s+/', $query);
 
-            foreach ($query_words as $word) {
-                if (strlen($word) < self::MIN_WORD_LENGTH) {
-                    continue;
-                }
+        foreach ($query_words as $word) {
+            if (strlen($word) < $min_word_length) {
+                continue;
+            }
 
                 // Check if any word in the candidate is similar.
                 $candidate_words = preg_split('/\s+/', $candidate_lower);

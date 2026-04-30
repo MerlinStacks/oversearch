@@ -73,12 +73,35 @@ function overseek_search_woocommerce_missing_notice() {
 }
 
 /**
+ * Register the shortcode for search replacement.
+ */
+function overseek_search_shortcode( $atts ) {
+    $atts = shortcode_atts(
+        array(
+            'placeholder'    => __( 'Search products...', 'overseek-search' ),
+            'max_results'    => 5,
+            'show_voice'     => 'true',
+        ),
+        $atts,
+        'overseek_search'
+    );
+
+    $container_id = 'overseek-inline-search-' . uniqid();
+
+    return sprintf(
+        '<div id="%s" class="overseek-inline-mount" data-overseek-search="true"></div>',
+        esc_attr( $container_id )
+    );
+}
+add_shortcode( 'overseek_search', 'overseek_search_shortcode' );
+
+/**
  * Plugin activation hook.
  */
 function overseek_search_activate() {
     require_once OVERSEEK_SEARCH_PLUGIN_DIR . 'includes/class-overseek-search-database.php';
     Overseek_Search_Database::create_tables();
-    
+
     // Set default options.
     $defaults = array(
         'fuzzy_enabled'        => true,
@@ -94,14 +117,14 @@ function overseek_search_activate() {
         'sku_weight'           => 2,
         'description_weight'   => 1,
     );
-    
+
     if ( ! get_option( 'overseek_search_settings' ) ) {
         update_option( 'overseek_search_settings', $defaults );
     }
-    
+
     // Store DB version for future migrations.
     update_option( 'overseek_search_db_version', OVERSEEK_SEARCH_VERSION );
-    
+
     // Flush rewrite rules to ensure REST API routes work.
     flush_rewrite_rules();
 }
@@ -115,3 +138,17 @@ function overseek_search_deactivate() {
     wp_clear_scheduled_hook( 'overseek_search_reindex_cron' );
 }
 register_deactivation_hook( __FILE__, 'overseek_search_deactivate' );
+
+/**
+ * Cron callback for background reindexing.
+ */
+function overseek_search_cron_reindex() {
+    require_once OVERSEEK_SEARCH_PLUGIN_DIR . 'includes/Search/class-search-index.php';
+    $stats = Overseek_Search_Index::cron_reindex();
+    
+    // Log results.
+    if (is_array($stats)) {
+        error_log('OverSeek Search: Background reindex batch completed. Indexed: ' . $stats['indexed'] . ', Failed: ' . $stats['failed'] . ', Remaining: ' . $stats['remaining']);
+    }
+}
+add_action( 'overseek_search_reindex_cron', 'overseek_search_cron_reindex' );

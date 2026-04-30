@@ -102,23 +102,39 @@ class Overseek_Search_Replacement {
         // Generate unique ID for multiple search forms on same page.
         static $instance = 0;
         $instance++;
-        
-        $container_id = 'overseek-inline-search-' . $instance;
-        
-        return sprintf(
-            '<div id="%s" class="overseek-inline-mount" data-overseek-search="true"></div>',
-            esc_attr( $container_id )
-        );
-    }
 
-    /**
-     * Intercept native product search and pass query to OverSeek.
-     */
-    public function intercept_search_redirect() {
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check for search query.
-        if ( ! isset( $_GET['s'] ) ) {
-            return;
-        }
+        $container_id = 'overseek-inline-search-' . $instance;
+
+        // Set action to WooCommerce shop page (WC-products search).
+        $action = function_exists( 'wc_get_page_id' )
+            ? get_permalink( wc_get_page_id( 'shop' ) )
+            : home_url( '/shop/' );
+
+        return sprintf(
+            '<div id="%1$s" class="overseek-inline-mount" data-overseek-search="true">
+                <noscript>
+                    <form role="search" method="get" action="%3$s" class="overseek-fallback-form">
+                        <label for="overseek-search-input-%2$d" class="screen-reader-text">%4$s</label>
+                        <input
+                            id="overseek-search-input-%2$d"
+                            type="search"
+                            name="s"
+                            placeholder="%5$s"
+                            value="%6$s"
+                            required
+                        />
+                        <input type="hidden" name="post_type" value="product" />
+                        <button type="submit">%4$s</button>
+                    </form>
+                </noscript>
+            </div>',
+            esc_attr( $container_id ),                         // 1 %s
+            absint( $instance ),                                // 2 %d
+            esc_url( $action ),                                  // 3 %s
+            esc_attr_x( 'Search', 'submit button', 'overseek-search' ), // 4 %s
+            esc_attr_x( 'Search products...', 'placeholder', 'overseek-search' ), // 5 %s
+            esc_attr( isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '' ) // 6 %s
+        );
 
         // Only intercept product searches.
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
