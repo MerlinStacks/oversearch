@@ -205,6 +205,7 @@ class Overseek_Search_Search_Controller {
 			return new WP_REST_Response( $results, 200 );
 		} catch ( \Throwable $e ) {
 			// Log full error details server-side.
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Needed for server-side diagnostics.
 			error_log( 'OverSeek Search Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
 
 			// Only expose details in debug mode.

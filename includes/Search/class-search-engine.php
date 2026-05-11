@@ -143,7 +143,7 @@ class Overseek_Search_Engine {
 
 		// Build the main search query with weighted scoring.
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$sql = $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above
+		$sql = $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Dynamic placeholder list assembled safely.
 			"SELECT 
                 product_id,
                 title,
@@ -286,7 +286,7 @@ class Overseek_Search_Engine {
 		$placeholders = implode( ', ', array_fill( 0, count( $matched_titles ), '%s' ) );
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$sql = $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above
+		$sql = $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Dynamic placeholder list assembled safely.
 			"SELECT product_id, title, sku, short_description, categories, price, sale_price, stock_status, image_url, 1 AS relevance_score
             FROM $table
             WHERE title IN ($placeholders)
@@ -377,24 +377,51 @@ class Overseek_Search_Engine {
 		$highlight = ! empty( $this->settings['highlight_matches'] );
 
 		foreach ( $results as $row ) {
-			$title = $row['title'];
+			$product_id = isset( $row['product_id'] ) ? (int) $row['product_id'] : 0;
+			$title      = $row['title'];
 
 			if ( $highlight ) {
 				$title = $this->highlight_matches( $title, $query );
 			}
 
+			$permalink = $product_id > 0 ? get_permalink( $product_id ) : '';
+
+			$image_url = ! empty( $row['image_url'] ) ? $row['image_url'] : '';
+			if ( empty( $image_url ) && $product_id > 0 ) {
+				$thumbnail_id = get_post_thumbnail_id( $product_id );
+				if ( $thumbnail_id ) {
+					$image_url = wp_get_attachment_image_url( $thumbnail_id, 'woocommerce_thumbnail' );
+				}
+			}
+
+			$price      = isset( $row['price'] ) ? (float) $row['price'] : 0.0;
+			$sale_price = ! empty( $row['sale_price'] ) ? (float) $row['sale_price'] : null;
+			if ( $product_id > 0 && ( $price <= 0 || ( null === $sale_price && isset( $row['sale_price'] ) ) ) && function_exists( 'wc_get_product' ) ) {
+				$product = wc_get_product( $product_id );
+				if ( $product ) {
+					$product_price = $product->get_price();
+					if ( '' !== $product_price && null !== $product_price ) {
+						$price = (float) $product_price;
+					}
+					$product_sale_price = $product->get_sale_price();
+					if ( '' !== $product_sale_price && null !== $product_sale_price ) {
+						$sale_price = (float) $product_sale_price;
+					}
+				}
+			}
+
 			$formatted[] = array(
-				'id'                => (int) $row['product_id'],
+				'id'                => $product_id,
 				'title'             => $title,
 				'title_raw'         => $row['title'],
 				'sku'               => $row['sku'],
 				'short_description' => wp_trim_words( $row['short_description'], 15, '...' ),
 				'categories'        => $row['categories'],
-				'price'             => (float) $row['price'],
-				'sale_price'        => $row['sale_price'] ? (float) $row['sale_price'] : null,
+				'price'             => $price,
+				'sale_price'        => $sale_price,
 				'stock_status'      => $row['stock_status'],
-				'image_url'         => $row['image_url'],
-				'url'               => get_permalink( $row['product_id'] ),
+				'image_url'         => $image_url,
+				'url'               => $permalink ? $permalink : '',
 				'score'             => isset( $row['relevance_score'] ) ? (float) $row['relevance_score'] : 0,
 			);
 		}

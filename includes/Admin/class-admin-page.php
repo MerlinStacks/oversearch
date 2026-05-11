@@ -49,48 +49,53 @@ class Overseek_Search_Admin_Page {
 	 * Add admin menu page.
 	 */
 	public function add_menu_page() {
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 		add_menu_page(
 			__( 'OverSeek Search', 'overseek-search' ),
 			__( 'OverSeek Search', 'overseek-search' ),
-			'manage_woocommerce',
+			'manage_woocommerce', // phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 			'overseek-search',
 			array( $this, 'render_page' ),
 			'dashicons-search',
 			56
 		);
 
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 		add_submenu_page(
 			'overseek-search',
 			__( 'Settings', 'overseek-search' ),
 			__( 'Settings', 'overseek-search' ),
-			'manage_woocommerce',
+			'manage_woocommerce', // phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 			'overseek-search',
 			array( $this, 'render_page' )
 		);
 
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 		add_submenu_page(
 			'overseek-search',
 			__( 'Analytics', 'overseek-search' ),
 			__( 'Analytics', 'overseek-search' ),
-			'manage_woocommerce',
+			'manage_woocommerce', // phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 			'overseek-search-analytics',
 			array( $this, 'render_page' )
 		);
 
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 		add_submenu_page(
 			'overseek-search',
 			__( 'Synonyms', 'overseek-search' ),
 			__( 'Synonyms', 'overseek-search' ),
-			'manage_woocommerce',
+			'manage_woocommerce', // phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 			'overseek-search-synonyms',
 			array( $this, 'render_page' )
 		);
 
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 		add_submenu_page(
 			'overseek-search',
 			__( 'Boosts', 'overseek-search' ),
 			__( 'Boosts', 'overseek-search' ),
-			'manage_woocommerce',
+			'manage_woocommerce', // phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 			'overseek-search-boosts',
 			array( $this, 'render_page' )
 		);
@@ -122,6 +127,7 @@ class Overseek_Search_Admin_Page {
 		}
 
 		// Determine current tab.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin page context.
 		$current_page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'overseek-search';
 		$tab_map      = array(
 			'overseek-search'           => 'settings',

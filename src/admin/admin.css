@@ -9,11 +9,12 @@
 	CSS CUSTOM PROPERTIES (Design Tokens)
 	======================================== */
 :root {
+
 	/* Core palette - vibrant & bold */
 	--os-black: #0a0a0a;
 	--os-white: #fafafa;
 	--os-bg: #f5f5f0;
-	--os-card: #ffffff;
+	--os-card: #fff;
 
 	/* Accent colors - eye-catching */
 	--os-primary: #5046e5;
@@ -36,8 +37,8 @@
 	--os-border-thin: 2px solid var(--os-black);
 
 	/* Typography */
-	--os-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-	--os-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+	--os-font: "Inter", -apple-system, blinkmacsystemfont, sans-serif;
+	--os-font-mono: "JetBrains Mono", "Fira Code", monospace;
 
 	/* Transitions */
 	--os-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -58,8 +59,8 @@
 }
 
 /* Hide default WP admin notices in our area */
-.overseek-admin-app~.notice,
-.wrap>.notice:first-child {
+.overseek-admin-app ~ .notice,
+.wrap > .notice:first-child {
 	display: none;
 }
 
@@ -91,7 +92,7 @@
 	align-items: center;
 	justify-content: center;
 	font-size: 28px;
-	color: white;
+	color: #fff;
 	transform: rotate(-3deg);
 }
 
@@ -116,7 +117,7 @@
 
 .overseek-version-badge {
 	background: var(--os-accent);
-	color: white;
+	color: #fff;
 	font-size: 11px;
 	font-weight: 700;
 	padding: 4px 10px;
@@ -156,12 +157,12 @@
 	transform: translate(-2px, -2px);
 	box-shadow: var(--os-shadow-md);
 	background: var(--os-primary-light);
-	color: white;
+	color: #fff;
 }
 
 .overseek-tab-panel .components-tab-panel__tabs-item.is-active {
 	background: var(--os-primary);
-	color: white;
+	color: #fff;
 	transform: translate(-2px, -2px);
 	box-shadow: var(--os-shadow-md);
 }
@@ -228,6 +229,7 @@
 	position: relative;
 	overflow: hidden;
 	transition: all var(--os-transition);
+	animation: slideIn 0.4s ease forwards;
 }
 
 .overseek-card:hover {
@@ -264,7 +266,7 @@
 
 /* Card accent stripe */
 .overseek-card::before {
-	content: '';
+	content: "";
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -328,6 +330,7 @@
 	position: relative;
 	transition: all var(--os-spring);
 	cursor: default;
+	animation: slideIn 0.4s ease forwards;
 }
 
 .kpi-card:hover {
@@ -336,7 +339,7 @@
 }
 
 .kpi-card::after {
-	content: '';
+	content: "";
 	position: absolute;
 	bottom: 0;
 	left: 0;
@@ -428,7 +431,7 @@
 
 .overseek-admin-app .components-button.is-primary {
 	background: var(--os-primary);
-	color: white;
+	color: #fff;
 	border: var(--os-border);
 	box-shadow: var(--os-shadow-sm);
 	padding: 12px 24px;
@@ -455,14 +458,14 @@
 
 .overseek-admin-app .components-button.is-secondary:hover {
 	background: var(--os-accent);
-	color: white;
+	color: #fff;
 	transform: translate(-2px, -2px);
 	box-shadow: var(--os-shadow-md);
 }
 
 .overseek-admin-app .components-button.is-destructive {
 	background: var(--os-danger);
-	color: white;
+	color: #fff;
 	border: var(--os-border);
 }
 
@@ -552,13 +555,13 @@
 	transition: all var(--os-transition);
 }
 
+.overseek-table td:first-child {
+	font-weight: 600;
+}
+
 .overseek-table tr:hover td {
 	background: #f0f0f0;
 	transform: translateX(4px);
-}
-
-.overseek-table td:first-child {
-	font-weight: 600;
 }
 
 /* ========================================
@@ -574,19 +577,19 @@
 
 .overseek-admin-app .components-notice.is-success {
 	background: var(--os-accent);
-	color: white;
+	color: #fff;
 	border-color: var(--os-black);
 }
 
 .overseek-admin-app .components-notice.is-error {
 	background: var(--os-danger);
-	color: white;
+	color: #fff;
 	border-color: var(--os-black);
 }
 
 .overseek-admin-app .components-notice.is-info {
 	background: var(--os-primary);
-	color: white;
+	color: #fff;
 	border-color: var(--os-black);
 }
 
@@ -613,7 +616,7 @@
 	letter-spacing: 0.5px;
 }
 
-.overseek-date-filter select {
+.overseek-admin-app .overseek-date-filter select {
 	padding: 10px 16px;
 	background: var(--os-white);
 	border: var(--os-border);
@@ -622,7 +625,7 @@
 	cursor: pointer;
 }
 
-.overseek-date-filter select:hover {
+.overseek-admin-app .overseek-date-filter select:hover {
 	transform: translate(-2px, -2px);
 	box-shadow: var(--os-shadow-md);
 }
@@ -647,6 +650,7 @@
 }
 
 @media (max-width: 1024px) {
+
 	.overseek-tables-grid {
 		grid-template-columns: 1fr;
 	}
@@ -690,6 +694,7 @@
 	ANIMATIONS
 	======================================== */
 @keyframes slideIn {
+
 	from {
 		opacity: 0;
 		transform: translateY(20px);
@@ -699,10 +704,6 @@
 		opacity: 1;
 		transform: translateY(0);
 	}
-}
-
-.overseek-card {
-	animation: slideIn 0.4s ease forwards;
 }
 
 .overseek-card:nth-child(1) {
@@ -723,10 +724,6 @@
 
 .overseek-card:nth-child(5) {
 	animation-delay: 200ms;
-}
-
-.kpi-card {
-	animation: slideIn 0.4s ease forwards;
 }
 
 .kpi-card:nth-child(1) {
@@ -753,6 +750,7 @@
 	RESPONSIVE
 	======================================== */
 @media (max-width: 782px) {
+
 	.overseek-admin-app {
 		padding: 16px;
 		margin-left: 0;

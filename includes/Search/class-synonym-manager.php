@@ -38,7 +38,7 @@ class Overseek_Search_Synonym_Manager {
 
 		global $wpdb;
 
-		$table = Overseek_Search_Database::get_synonyms_table();
+		$table   = Overseek_Search_Database::get_synonyms_table();
 		$results = $wpdb->get_results(
 			"SELECT id, base_term, synonyms, one_way FROM $table ORDER BY base_term ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			ARRAY_A

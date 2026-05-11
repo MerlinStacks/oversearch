@@ -153,6 +153,7 @@ function overseek_search_cron_reindex() {
 
 	// Log results.
 	if ( is_array( $stats ) ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Useful operational log for scheduled reindex.
 		error_log( 'OverSeek Search: Background reindex batch completed. Indexed: ' . $stats['indexed'] . ', Failed: ' . $stats['failed'] . ', Remaining: ' . $stats['remaining'] );
 	}
 }

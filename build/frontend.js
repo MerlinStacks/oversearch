@@ -240,13 +240,17 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 function formatPrice(price) {
-  if (!price) {
+  if (price === null || price === undefined || price === '') {
+    return '';
+  }
+  const numericPrice = Number(price);
+  if (Number.isNaN(numericPrice)) {
     return '';
   }
   return new Intl.NumberFormat(undefined, {
     style: 'currency',
     currency: 'USD'
-  }).format(price);
+  }).format(numericPrice);
 }
 function saveToHistory(term) {
   if (!term || term.trim().length < 2) {
@@ -403,12 +407,19 @@ function ProductCard({
   product,
   onClick
 }) {
-  const handleClick = () => {
+  const productUrl = product.url || product.permalink || '#';
+  const handleClick = e => {
+    if (!productUrl || '#' === productUrl) {
+      e.preventDefault();
+      return;
+    }
     saveRecentProduct(product);
     onClick?.();
+    window.location.assign(productUrl);
+    e.preventDefault();
   };
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
-    href: product.url,
+    href: productUrl,
     className: "overseek-dropdown__product",
     onClick: handleClick
   }, product.image_url && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
@@ -416,7 +427,10 @@ function ProductCard({
     alt: "",
     className: "overseek-dropdown__product-image",
     loading: "lazy"
-  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }), !product.image_url && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__product-image overseek-dropdown__product-image--placeholder",
+    "aria-hidden": "true"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(ProductImagePlaceholderIcon, null)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "overseek-dropdown__product-info"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
     className: "overseek-dropdown__product-title",
@@ -426,6 +440,30 @@ function ProductCard({
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
     className: "overseek-dropdown__product-price"
   }, formatPrice(product.sale_price || product.price))));
+}
+function ProductImagePlaceholderIcon() {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+    viewBox: "0 0 24 24",
+    width: "20",
+    height: "20",
+    fill: "none"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("rect", {
+    x: "3",
+    y: "4",
+    width: "18",
+    height: "16",
+    rx: "2",
+    stroke: "currentColor",
+    strokeWidth: "1.5"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("circle", {
+    cx: "9",
+    cy: "10",
+    r: "1.4",
+    fill: "currentColor"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    d: "M6 17l4.3-4.4a1 1 0 011.44 0L14 15l1.9-1.9a1 1 0 011.42 0L19 14.8V18H6z",
+    fill: "currentColor"
+  }));
 }
 
 // ============================================
@@ -511,6 +549,13 @@ function SearchDropdown() {
   const dropdownRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(null);
   const debouncedQuery = useDebounce(query, 300);
   const maxResults = maxDropdownResults || 5;
+  const searchPlaceholder = i18n?.searchPlaceholder || 'Search for products...';
+  const searchHistoryLabel = i18n?.recentSearches || 'Your search history';
+  const clearLabel = i18n?.clear || 'Clear';
+  const noResultsLabel = i18n?.noResults || 'No products found';
+  const didYouMeanLabel = i18n?.didYouMean || 'Did you mean:';
+  const mobileViewAllLabel = 'View all results';
+  const desktopViewAllLabel = 'View all results →';
 
   // Check for mobile.
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
@@ -546,7 +591,7 @@ function SearchDropdown() {
       setResults([]);
       setSuggestions([]);
     }
-  }, [debouncedQuery]);
+  }, [debouncedQuery, fetchSuggestions, performSearch]);
 
   // Close dropdown when clicking outside.
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
@@ -602,8 +647,9 @@ function SearchDropdown() {
         setIsOpen(false);
       }
     };
-    dropdownRef.current?.addEventListener('keydown', handleKey);
-    return () => dropdownRef.current?.removeEventListener('keydown', handleKey);
+    const dropdownElement = dropdownRef.current;
+    dropdownElement?.addEventListener('keydown', handleKey);
+    return () => dropdownElement?.removeEventListener('keydown', handleKey);
   }, [isOpen, activeIndex]);
 
   // Bind to PHP-rendered triggers.
@@ -618,7 +664,7 @@ function SearchDropdown() {
     return () => triggers.forEach(t => t.removeEventListener('click', handleClick));
   }, []);
   const abortControllerRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(null);
-  const performSearch = async () => {
+  const performSearch = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useCallback)(async () => {
     // Cancel previous request if still pending.
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -660,8 +706,8 @@ function SearchDropdown() {
       }
     }
     setLoading(false);
-  };
-  const fetchSuggestions = async () => {
+  }, [debouncedQuery, maxResults]);
+  const fetchSuggestions = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useCallback)(async () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -684,7 +730,7 @@ function SearchDropdown() {
         setSuggestions([]);
       }
     }
-  };
+  }, [debouncedQuery]);
   const handleInputFocus = () => setIsOpen(true);
   const handleHistoryClick = term => {
     setQuery(term);
@@ -717,6 +763,63 @@ function SearchDropdown() {
   const showDidYouMean = showResults && !loading && didYouMean && results.length <= 3;
   const showDropdown = showHistory || showPopular || showRecent || showResults;
   const viewAllUrl = `/?s=${encodeURIComponent(query)}&post_type=product`;
+  const renderDropdownContent = viewAllLabel => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, showRecent && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__section"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__section-header"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, "Recently Viewed")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__recent"
+  }, recentProducts.map(p => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(RecentProductItem, {
+    key: p.id,
+    product: p
+  })))), showHistory && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__section"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__section-header"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, searchHistoryLabel), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    onClick: handleClearHistory
+  }, clearLabel)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__history"
+  }, history.map(term => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(HistoryItem, {
+    key: term,
+    term: term,
+    onClick: () => handleHistoryClick(term),
+    onDelete: () => handleHistoryDelete(term)
+  })))), showPopular && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__section"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__section-header"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, "Popular Searches")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__history"
+  }, popular.map(term => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(HistoryItem, {
+    key: term,
+    term: term,
+    onClick: () => handleHistoryClick(term),
+    onDelete: () => {}
+  })))), showResults && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__results"
+  }, results.map(p => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(ProductCard, {
+    key: p.id,
+    product: p,
+    onClick: handleProductClick
+  }))), showSuggestions && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__suggestions"
+  }, suggestions.map(term => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(SuggestionItem, {
+    key: term,
+    term: term,
+    onClick: () => handleSuggestionClick(term)
+  }))), results.length > 0 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+    href: viewAllUrl,
+    className: "overseek-dropdown__view-all"
+  }, viewAllLabel)), showNoResults && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__empty"
+  }, noResultsLabel), showDidYouMean && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "overseek-dropdown__did-you-mean"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, didYouMeanLabel), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    onClick: () => handleDidYouMeanClick(didYouMean)
+  }, didYouMean)));
 
   // ============================================
   // MOBILE MODAL
@@ -737,7 +840,7 @@ function SearchDropdown() {
       ref: inputRef,
       type: "text",
       className: "overseek-mobile-input",
-      placeholder: i18n?.searchPlaceholder || 'Search for products...',
+      placeholder: searchPlaceholder,
       value: query,
       onChange: e => setQuery(e.target.value)
       // eslint-disable-next-line jsx-a11y/no-autofocus
@@ -755,63 +858,7 @@ function SearchDropdown() {
       onClick: () => setIsOpen(false)
     }, "\u2715")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: "overseek-mobile-body"
-    }, showRecent && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__section"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__section-header"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, "Recently Viewed")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__recent"
-    }, recentProducts.map(p => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(RecentProductItem, {
-      key: p.id,
-      product: p
-    })))), showHistory && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__section"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__section-header"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, i18n?.recentSearches || 'Your search history'), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-      type: "button",
-      onClick: handleClearHistory
-    }, i18n?.clear || 'Clear')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__history"
-    }, history.map(term => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(HistoryItem, {
-      key: term,
-      term: term,
-      onClick: () => handleHistoryClick(term),
-      onDelete: () => handleHistoryDelete(term)
-    })))), showPopular && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__section"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__section-header"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, "Popular Searches")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__history"
-    }, popular.map(term => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(HistoryItem, {
-      key: term,
-      term: term,
-      onClick: () => handleHistoryClick(term),
-      onDelete: () => {}
-    })))), showResults && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__results"
-    }, results.map(p => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(ProductCard, {
-      key: p.id,
-      product: p,
-      onClick: handleProductClick
-    }))), showSuggestions && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__suggestions"
-    }, suggestions.map(term => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(SuggestionItem, {
-      key: term,
-      term: term,
-      onClick: () => handleSuggestionClick(term)
-    }))), results.length > 0 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
-      href: viewAllUrl,
-      className: "overseek-dropdown__view-all"
-    }, "View all results")), showNoResults && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__empty"
-    }, i18n?.noResults || 'No products found'), showDidYouMean && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: "overseek-dropdown__did-you-mean"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, i18n?.didYouMean || 'Did you mean:'), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-      type: "button",
-      onClick: () => handleDidYouMeanClick(didYouMean)
-    }, didYouMean)))));
+    }, renderDropdownContent(mobileViewAllLabel))));
   }
 
   // ============================================
@@ -828,7 +875,7 @@ function SearchDropdown() {
     ref: inputRef,
     type: "text",
     className: "overseek-search-input",
-    placeholder: i18n?.searchPlaceholder || 'Search for products...',
+    placeholder: searchPlaceholder,
     value: query,
     onChange: e => setQuery(e.target.value),
     onFocus: handleInputFocus,
@@ -840,63 +887,7 @@ function SearchDropdown() {
     disabled: loading
   })), showDropdown && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "overseek-dropdown"
-  }, showRecent && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__section"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__section-header"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, "Recently Viewed")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__recent"
-  }, recentProducts.map(p => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(RecentProductItem, {
-    key: p.id,
-    product: p
-  })))), showHistory && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__section"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__section-header"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, i18n?.recentSearches || 'Your search history'), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-    type: "button",
-    onClick: handleClearHistory
-  }, i18n?.clear || 'Clear')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__history"
-  }, history.map((term, idx) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(HistoryItem, {
-    key: idx,
-    term: term,
-    onClick: () => handleHistoryClick(term),
-    onDelete: () => handleHistoryDelete(term)
-  })))), showPopular && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__section"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__section-header"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, "Popular Searches")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__history"
-  }, popular.map((term, idx) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(HistoryItem, {
-    key: idx,
-    term: term,
-    onClick: () => handleHistoryClick(term),
-    onDelete: () => {}
-  })))), showResults && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__results"
-  }, results.map(p => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(ProductCard, {
-    key: p.id,
-    product: p,
-    onClick: handleProductClick
-  }))), showSuggestions && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__suggestions"
-  }, suggestions.map((term, idx) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(SuggestionItem, {
-    key: idx,
-    term: term,
-    onClick: () => handleSuggestionClick(term)
-  }))), results.length > 0 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
-    href: viewAllUrl,
-    className: "overseek-dropdown__view-all"
-  }, "View all results \u2192")), showNoResults && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__empty"
-  }, i18n?.noResults || 'No products found'), showDidYouMean && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "overseek-dropdown__did-you-mean"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, i18n?.didYouMean || 'Did you mean:'), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-    type: "button",
-    onClick: () => handleDidYouMeanClick(didYouMean)
-  }, didYouMean))));
+  }, renderDropdownContent(desktopViewAllLabel)));
 }
 
 // Mount the app into all available containers.

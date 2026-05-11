@@ -59,6 +59,7 @@ class Overseek_Search_Replacement {
 	 * @return string The replacement HTML.
 	 */
 	public function replace_product_search_form( $form ) {
+		unset( $form );
 		return $this->get_trigger_button();
 	}
 
@@ -70,6 +71,7 @@ class Overseek_Search_Replacement {
 	 * @return string The replacement HTML or original form.
 	 */
 	public function replace_search_form( $form, $args = array() ) {
+		unset( $args );
 		// Only replace on WooCommerce pages or when explicitly searching products.
 		if ( ! $this->is_woocommerce_context() ) {
 			return $form;
@@ -133,6 +135,7 @@ class Overseek_Search_Replacement {
 			esc_url( $action ),                                  // 3 %s
 			esc_attr_x( 'Search', 'submit button', 'overseek-search' ), // 4 %s
 			esc_attr_x( 'Search products...', 'placeholder', 'overseek-search' ), // 5 %s
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only value for search fallback input.
 			esc_attr( isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '' ) // 6 %s
 		);
 	}

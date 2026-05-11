@@ -163,6 +163,7 @@ class Overseek_Search_Analytics_Controller {
 	 * @return bool
 	 */
 	public function admin_permission_check() {
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 		return current_user_can( 'manage_woocommerce' );
 	}
 

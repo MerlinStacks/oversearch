@@ -306,7 +306,7 @@ class Overseek_Search_Index {
 		$table = Overseek_Search_Database::get_index_table();
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is safe from Overseek_Search_Database
-		$count        = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" );
+		$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" );
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is safe from Overseek_Search_Database
 		$last_updated = $wpdb->get_var( "SELECT MAX(updated_at) FROM $table" );
 

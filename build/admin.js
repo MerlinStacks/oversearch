@@ -158,6 +158,9 @@ __webpack_require__.r(__webpack_exports__);
 
 /* global confirm */
 
+const API_NAMESPACE = '/overseek-search/v1';
+const apiPath = endpoint => `${API_NAMESPACE}${endpoint}`;
+
 // Configure API fetch with nonce.
 _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default().use(_wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default().createNonceMiddleware(window.overseekSearchAdmin?.nonce));
 
@@ -197,7 +200,7 @@ function SettingsTab() {
   const loadSettings = async () => {
     try {
       const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: '/overseek-search/v1/settings'
+        path: apiPath('/settings')
       });
       setSettings(response.settings);
     } catch (error) {
@@ -210,7 +213,7 @@ function SettingsTab() {
   const loadIndexStats = async () => {
     try {
       const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: '/overseek-search/v1/index-stats'
+        path: apiPath('/index-stats')
       });
       setIndexStats(response);
     } catch (error) {
@@ -222,7 +225,7 @@ function SettingsTab() {
     setSaving(true);
     try {
       await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: '/overseek-search/v1/settings',
+        path: apiPath('/settings'),
         method: 'POST',
         data: settings
       });
@@ -246,7 +249,7 @@ function SettingsTab() {
     });
     try {
       const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: '/overseek-search/v1/reindex',
+        path: apiPath('/reindex'),
         method: 'POST'
       });
       setNotice({
@@ -406,11 +409,11 @@ function AnalyticsTab() {
     setLoading(true);
     try {
       const [summaryRes, queriesRes, noResultsRes] = await Promise.all([_wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: `/overseek-search/v1/analytics/summary?days=${days}`
+        path: apiPath(`/analytics/summary?days=${days}`)
       }), _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: `/overseek-search/v1/analytics/queries?days=${days}&limit=10`
+        path: apiPath(`/analytics/queries?days=${days}&limit=10`)
       }), _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: `/overseek-search/v1/analytics/no-results?days=${days}&limit=10`
+        path: apiPath(`/analytics/no-results?days=${days}&limit=10`)
       })]);
       setSummary(summaryRes);
       setTopQueries(queriesRes.queries);
@@ -531,7 +534,7 @@ function SynonymsTab() {
   const loadSynonyms = async () => {
     try {
       const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: '/overseek-search/v1/synonyms'
+        path: apiPath('/synonyms')
       });
       setSynonyms(response.synonyms);
     } catch (error) {
@@ -551,7 +554,7 @@ function SynonymsTab() {
     setSaving(true);
     try {
       await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: '/overseek-search/v1/synonyms',
+        path: apiPath('/synonyms'),
         method: 'POST',
         data: {
           base_term: newBaseTerm,
@@ -582,7 +585,7 @@ function SynonymsTab() {
     }
     try {
       await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: `/overseek-search/v1/synonyms/${id}`,
+        path: apiPath(`/synonyms/${id}`),
         method: 'DELETE'
       });
       loadSynonyms();
@@ -667,7 +670,7 @@ function BoostsTab() {
   const loadBoosts = async () => {
     try {
       const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: '/overseek-search/v1/boosts'
+        path: apiPath('/boosts')
       });
       setBoosts(response.boosts || []);
     } catch (error) {
@@ -687,10 +690,10 @@ function BoostsTab() {
     setSaving(true);
     try {
       await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: '/overseek-search/v1/boosts',
+        path: apiPath('/boosts'),
         method: 'POST',
         data: {
-          product_id: parseInt(newProductId),
+          product_id: parseInt(newProductId, 10),
           query_pattern: newQuery || null,
           boost_type: newType,
           boost_weight: newWeight
@@ -720,7 +723,7 @@ function BoostsTab() {
     }
     try {
       await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: `/overseek-search/v1/boosts/${id}`,
+        path: apiPath(`/boosts/${id}`),
         method: 'DELETE'
       });
       loadBoosts();
@@ -734,7 +737,7 @@ function BoostsTab() {
   const toggleBoost = async (id, isActive) => {
     try {
       await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
-        path: `/overseek-search/v1/boosts/${id}/toggle`,
+        path: apiPath(`/boosts/${id}/toggle`),
         method: 'POST',
         data: {
           is_active: !isActive

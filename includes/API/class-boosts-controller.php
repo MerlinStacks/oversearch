@@ -100,16 +100,16 @@ class Overseek_Boosts_Controller {
 	 * @return bool True if has permission.
 	 */
 	public function check_permissions() {
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce capability.
 		return current_user_can( 'manage_woocommerce' );
 	}
 
 	/**
 	 * Get all boost rules.
 	 *
-	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response Response object.
 	 */
-	public function get_boosts( $request ) {
+	public function get_boosts() {
 		$boosts = $this->boost_manager->get_all_boosts();
 
 		// Enrich with product names.

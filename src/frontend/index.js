@@ -137,13 +137,19 @@ function useDebounce( value, delay ) {
 }
 
 function formatPrice( price ) {
-	if ( ! price ) {
+	if ( price === null || price === undefined || price === '' ) {
 		return '';
 	}
+
+	const numericPrice = Number( price );
+	if ( Number.isNaN( numericPrice ) ) {
+		return '';
+	}
+
 	return new Intl.NumberFormat( undefined, {
 		style: 'currency',
 		currency: 'USD',
-	} ).format( price );
+	} ).format( numericPrice );
 }
 
 function saveToHistory( term ) {
@@ -302,14 +308,23 @@ function VoiceSearch( { onResult, disabled } ) {
 // ============================================
 
 function ProductCard( { product, onClick } ) {
-	const handleClick = () => {
+	const productUrl = product.url || product.permalink || '#';
+
+	const handleClick = ( e ) => {
+		if ( ! productUrl || '#' === productUrl ) {
+			e.preventDefault();
+			return;
+		}
+
 		saveRecentProduct( product );
 		onClick?.();
+		window.location.assign( productUrl );
+		e.preventDefault();
 	};
 
 	return (
 		<a
-			href={ product.url }
+			href={ productUrl }
 			className="overseek-dropdown__product"
 			onClick={ handleClick }
 		>
@@ -321,6 +336,14 @@ function ProductCard( { product, onClick } ) {
 					loading="lazy"
 				/>
 			) }
+			{ ! product.image_url && (
+				<div
+					className="overseek-dropdown__product-image overseek-dropdown__product-image--placeholder"
+					aria-hidden="true"
+				>
+					<ProductImagePlaceholderIcon />
+				</div>
+			) }
 			<div className="overseek-dropdown__product-info">
 				<span
 					className="overseek-dropdown__product-title"
@@ -331,6 +354,27 @@ function ProductCard( { product, onClick } ) {
 				</span>
 			</div>
 		</a>
+	);
+}
+
+function ProductImagePlaceholderIcon() {
+	return (
+		<svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+			<rect
+				x="3"
+				y="4"
+				width="18"
+				height="16"
+				rx="2"
+				stroke="currentColor"
+				strokeWidth="1.5"
+			/>
+			<circle cx="9" cy="10" r="1.4" fill="currentColor" />
+			<path
+				d="M6 17l4.3-4.4a1 1 0 011.44 0L14 15l1.9-1.9a1 1 0 011.42 0L19 14.8V18H6z"
+				fill="currentColor"
+			/>
+		</svg>
 	);
 }
 

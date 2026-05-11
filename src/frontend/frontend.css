@@ -8,7 +8,7 @@
 :root {
 	--overseek-primary: #6366f1;
 	--overseek-primary-hover: #4f46e5;
-	--overseek-bg: #ffffff;
+	--overseek-bg: #fff;
 	--overseek-bg-hover: #f9fafb;
 	--overseek-border: #e5e7eb;
 	--overseek-text: #1f2937;
@@ -26,7 +26,7 @@
 	position: relative;
 	width: 100%;
 	max-width: 500px;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 	z-index: 999999;
 }
 
@@ -75,6 +75,7 @@
 }
 
 @keyframes overseek-spin {
+
 	to {
 		transform: rotate(360deg);
 	}
@@ -151,6 +152,7 @@
 }
 
 @keyframes overseek-fade-in {
+
 	from {
 		opacity: 0;
 		transform: translateY(-8px);
@@ -245,13 +247,13 @@
 	transition: opacity 0.15s ease, background 0.15s ease;
 }
 
-.overseek-dropdown__history-item:hover .overseek-dropdown__history-delete {
-	opacity: 1;
-}
-
 .overseek-dropdown__history-delete:hover {
 	background: rgba(0, 0, 0, 0.05);
 	color: #ef4444;
+}
+
+.overseek-dropdown__history-item:hover .overseek-dropdown__history-delete {
+	opacity: 1;
 }
 
 /* Recent Products */
@@ -369,6 +371,14 @@
 	flex-shrink: 0;
 }
 
+.overseek-dropdown__product-image--placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #9ca3af;
+	background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
 .overseek-dropdown__product-info {
 	flex: 1;
 	min-width: 0;
@@ -422,7 +432,7 @@
 	font-style: italic;
 }
 
-.overseek-dropdown__did-you-mean button {
+.overseek-dropdown__did-you-mean button:not(:disabled) {
 	background: none;
 	border: none;
 	padding: 4px 8px;
@@ -571,6 +581,7 @@
 	========================================== */
 
 @media (max-width: 767px) {
+
 	.overseek-search-wrapper {
 		display: none;
 	}
@@ -581,6 +592,7 @@
 }
 
 @media (min-width: 768px) {
+
 	.overseek-mobile-overlay {
 		display: none;
 	}

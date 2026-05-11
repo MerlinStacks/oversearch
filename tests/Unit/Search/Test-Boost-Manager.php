@@ -13,7 +13,7 @@ use Overseek_Boost_Manager;
 /**
  * Class Test_Boost_Manager
  */
-class Test_Boost_Manager extends TestCase
+class BoostManagerTest extends TestCase
 {
     /**
      * The boost manager under test.

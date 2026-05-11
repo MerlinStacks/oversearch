@@ -13,7 +13,7 @@ use Overseek_Search_Fuzzy_Matcher;
 /**
  * Class Test_Fuzzy_Matcher
  */
-class Test_Fuzzy_Matcher extends TestCase
+class FuzzyMatcherTest extends TestCase
 {
     /**
      * The matcher under test.

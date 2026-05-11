@@ -75,6 +75,7 @@ class Overseek_Search_Realtime_Sync {
 	 * @param string $stock_status The new stock status.
 	 */
 	public function on_stock_changed( $product_id, $stock_status ) {
+		unset( $stock_status );
 		// Re-index to update stock status in search index.
 		$this->index->index_product( $product_id );
 		Overseek_Search_Engine::clear_cache();

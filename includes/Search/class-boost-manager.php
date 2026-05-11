@@ -329,8 +329,8 @@ class Overseek_Boost_Manager {
 			function ( $a, $b ) use ( $pinned_id_list ) {
 				$a_id  = $this->get_product_id( $a );
 				$b_id  = $this->get_product_id( $b );
-				$a_pos = array_search( $a_id, $pinned_id_list );
-				$b_pos = array_search( $b_id, $pinned_id_list );
+				$a_pos = array_search( $a_id, $pinned_id_list, true );
+				$b_pos = array_search( $b_id, $pinned_id_list, true );
 				$a_pos = ( false !== $a_pos ) ? $a_pos : PHP_INT_MAX;
 				$b_pos = ( false !== $b_pos ) ? $b_pos : PHP_INT_MAX;
 				return $a_pos - $b_pos;

@@ -14,6 +14,32 @@ define('OVERSEEK_SEARCH_PLUGIN_DIR', dirname(__DIR__) . '/');
 define('OVERSEEK_SEARCH_PLUGIN_URL', 'https://example.com/wp-content/plugins/overseek-search/');
 define('OVERSEEK_SEARCH_PLUGIN_BASENAME', 'overseek-search/overseek-search.php');
 
+if (!defined('OBJECT')) {
+    define('OBJECT', 'OBJECT');
+}
+
+if (!class_exists('WP_Error')) {
+    class WP_Error {
+        private $code;
+        private $message;
+        private $data;
+
+        public function __construct($code = '', $message = '', $data = '') {
+            $this->code = $code;
+            $this->message = $message;
+            $this->data = $data;
+        }
+
+        public function get_error_code() {
+            return $this->code;
+        }
+
+        public function get_error_message() {
+            return $this->message;
+        }
+    }
+}
+
 // WordPress stubs.
 if (!function_exists('add_action')) {
     function add_action($hook, $callback, $priority = 10, $accepted_args = 1) {}
@@ -80,3 +106,5 @@ if (!class_exists('WPDB')) {
 
 // Load plugin classes.
 require_once OVERSEEK_SEARCH_PLUGIN_DIR . 'includes/Search/class-fuzzy-matcher.php';
+require_once OVERSEEK_SEARCH_PLUGIN_DIR . 'includes/Search/class-boost-manager.php';
+require_once OVERSEEK_SEARCH_PLUGIN_DIR . 'includes/Search/class-search-engine.php';
