@@ -591,7 +591,7 @@ function SearchDropdown() {
       setResults([]);
       setSuggestions([]);
     }
-  }, [debouncedQuery, fetchSuggestions, performSearch]);
+  }, [debouncedQuery, maxResults]);
 
   // Close dropdown when clicking outside.
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
@@ -664,7 +664,7 @@ function SearchDropdown() {
     return () => triggers.forEach(t => t.removeEventListener('click', handleClick));
   }, []);
   const abortControllerRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(null);
-  const performSearch = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useCallback)(async () => {
+  async function performSearch() {
     // Cancel previous request if still pending.
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -706,8 +706,8 @@ function SearchDropdown() {
       }
     }
     setLoading(false);
-  }, [debouncedQuery, maxResults]);
-  const fetchSuggestions = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useCallback)(async () => {
+  }
+  async function fetchSuggestions() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -730,7 +730,7 @@ function SearchDropdown() {
         setSuggestions([]);
       }
     }
-  }, [debouncedQuery]);
+  }
   const handleInputFocus = () => setIsOpen(true);
   const handleHistoryClick = term => {
     setQuery(term);

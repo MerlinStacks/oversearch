@@ -33,6 +33,9 @@
         "php8": "php -l includes/*.php includes/**/*.php"
     },
     "config": {
+        "platform": {
+            "php": "8.2.31"
+        },
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
