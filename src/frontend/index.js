@@ -12,6 +12,7 @@ import {
 	useState,
 	useEffect,
 	useRef,
+	useCallback,
 	Component,
 } from '@wordpress/element';
 import './frontend.css';
@@ -501,17 +502,6 @@ function SearchDropdown() {
 		}
 	}, [] );
 
-	// Perform search when debounced query changes.
-	useEffect( () => {
-		if ( debouncedQuery.length >= 2 ) {
-			performSearch();
-			fetchSuggestions();
-		} else {
-			setResults( [] );
-			setSuggestions( [] );
-		}
-	}, [ debouncedQuery, maxResults ] );
-
 	// Close dropdown when clicking outside.
 	useEffect( () => {
 		const handleClick = ( e ) => {
@@ -613,7 +603,7 @@ function SearchDropdown() {
 	const searchAbortControllerRef = useRef( null );
 	const suggestAbortControllerRef = useRef( null );
 
-	async function performSearch() {
+	const performSearch = useCallback( async () => {
 		// Cancel previous request if still pending.
 		if ( searchAbortControllerRef.current ) {
 			searchAbortControllerRef.current.abort();
@@ -658,9 +648,9 @@ function SearchDropdown() {
 			}
 		}
 		setLoading( false );
-	}
+	}, [ debouncedQuery, maxResults ] );
 
-	async function fetchSuggestions() {
+	const fetchSuggestions = useCallback( async () => {
 		if ( suggestAbortControllerRef.current ) {
 			suggestAbortControllerRef.current.abort();
 		}
@@ -686,7 +676,18 @@ function SearchDropdown() {
 				setSuggestions( [] );
 			}
 		}
-	}
+	}, [ debouncedQuery ] );
+
+	// Perform search when debounced query changes.
+	useEffect( () => {
+		if ( debouncedQuery.length >= 2 ) {
+			performSearch();
+			fetchSuggestions();
+		} else {
+			setResults( [] );
+			setSuggestions( [] );
+		}
+	}, [ debouncedQuery, performSearch, fetchSuggestions ] );
 
 	const handleInputFocus = () => setIsOpen( true );
 	const handleHistoryClick = ( term ) => {
@@ -926,7 +927,6 @@ function mountSearchInContainer( container ) {
 }
 
 function mountOverseekApps() {
-	const footerRoot = document.getElementById( 'overseek-search-root' );
 	const inlineContainers = document.querySelectorAll(
 		'[data-overseek-search="true"]'
 	);
@@ -936,6 +936,7 @@ function mountOverseekApps() {
 		return;
 	}
 
+	const footerRoot = document.getElementById( 'overseek-search-root' );
 	if ( footerRoot ) {
 		mountSearchInContainer( footerRoot );
 	}
@@ -950,11 +951,13 @@ if (
 	document.addEventListener( 'DOMContentLoaded', mountOverseekApps );
 }
 
-const mountObserver = new MutationObserver( () => {
-	mountOverseekApps();
-} );
+if ( window.MutationObserver ) {
+	const mountObserver = new window.MutationObserver( () => {
+		mountOverseekApps();
+	} );
 
-mountObserver.observe( document.documentElement, {
-	childList: true,
-	subtree: true,
-} );
+	mountObserver.observe( document.documentElement, {
+		childList: true,
+		subtree: true,
+	} );
+}
