@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+vendor/
 
 # Build artifacts (optional - include if you want built files in repo)
 # build/
