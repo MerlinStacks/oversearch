@@ -81,9 +81,9 @@ class Overseek_Search_Engine {
 		// Ensure limit is at least 1 to prevent division by zero.
 		$limit = max( 1, (int) $limit );
 
-		// Check cache first.
 		$cache_key      = $this->get_cache_key( $query, $filters, $page, $limit );
-		$cached_results = get_transient( $cache_key );
+		$cache_enabled  = $this->is_cache_enabled_for_request( $query, $filters );
+		$cached_results = $cache_enabled ? get_transient( $cache_key ) : false;
 
 		if ( false !== $cached_results ) {
 			return $cached_results;
@@ -126,6 +126,8 @@ class Overseek_Search_Engine {
 			$where_values[]  = sanitize_text_field( $filters['stock_status'] );
 		}
 
+		$where_clauses[] = "catalog_visibility IN ('visible', 'catalog')";
+
 		// Language filter for WPML/Polylang multilingual support.
 		if ( ! empty( $filters['language'] ) ) {
 			$where_clauses[] = 'language = %s';
@@ -150,6 +152,7 @@ class Overseek_Search_Engine {
                 sku,
                 short_description,
                 categories,
+                brands,
                 price,
                 sale_price,
                 stock_status,
@@ -211,8 +214,9 @@ class Overseek_Search_Engine {
 			'expanded'    => $expanded_query !== $query ? $expanded_query : null,
 		);
 
-		// Cache the results.
-		set_transient( $cache_key, $response, self::CACHE_TTL );
+		if ( $cache_enabled ) {
+			set_transient( $cache_key, $response, self::CACHE_TTL );
+		}
 
 		return $response;
 	}
@@ -287,7 +291,7 @@ class Overseek_Search_Engine {
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$sql = $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Dynamic placeholder list assembled safely.
-			"SELECT product_id, title, sku, short_description, categories, price, sale_price, stock_status, image_url, 1 AS relevance_score
+			"SELECT product_id, title, sku, short_description, categories, brands, price, sale_price, stock_status, image_url, 1 AS relevance_score
             FROM $table
             WHERE title IN ($placeholders)
             LIMIT %d OFFSET %d",
@@ -410,6 +414,14 @@ class Overseek_Search_Engine {
 				}
 			}
 
+			$result_url = $permalink ? $permalink : '';
+			if ( $product_id > 0 ) {
+				$variation_url = $this->resolve_variation_url_for_query( $product_id, $query );
+				if ( $variation_url ) {
+					$result_url = $variation_url;
+				}
+			}
+
 			$formatted[] = array(
 				'id'                => $product_id,
 				'title'             => $title,
@@ -417,11 +429,12 @@ class Overseek_Search_Engine {
 				'sku'               => $row['sku'],
 				'short_description' => wp_trim_words( $row['short_description'], 15, '...' ),
 				'categories'        => $row['categories'],
+				'brands'            => $row['brands'] ?? '',
 				'price'             => $price,
 				'sale_price'        => $sale_price,
 				'stock_status'      => $row['stock_status'],
 				'image_url'         => $image_url,
-				'url'               => $permalink ? $permalink : '',
+				'url'               => $result_url,
 				'score'             => isset( $row['relevance_score'] ) ? (float) $row['relevance_score'] : 0,
 			);
 		}
@@ -465,6 +478,7 @@ class Overseek_Search_Engine {
 			'f' => array_filter( $filters ),
 			'p' => $page,
 			'l' => $limit,
+			'x' => $this->get_cache_context_key(),
 		);
 
 		return self::CACHE_PREFIX . md5( wp_json_encode( $key_data ) );
@@ -510,5 +524,75 @@ class Overseek_Search_Engine {
 			'facets'      => array(),
 			'query'       => '',
 		);
+	}
+
+	/**
+	 * Determine if caching is safe for current request context.
+	 *
+	 * @param string $query Search query.
+	 * @param array  $filters Search filters.
+	 * @return bool
+	 */
+	private function is_cache_enabled_for_request( $query, $filters ) {
+		$enabled = ! is_user_logged_in();
+
+		return (bool) apply_filters( 'overseek_search_enable_cache', $enabled, $query, $filters );
+	}
+
+	/**
+	 * Build a cache context key to avoid sharing contextual prices.
+	 *
+	 * @return array
+	 */
+	private function get_cache_context_key() {
+		$context = array(
+			'currency' => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '',
+			'lang'     => function_exists( 'get_locale' ) ? get_locale() : '',
+			'logged'   => is_user_logged_in() ? 1 : 0,
+		);
+
+		if ( is_user_logged_in() ) {
+			$user = wp_get_current_user();
+			if ( $user instanceof WP_User ) {
+				$context['roles'] = implode( ',', (array) $user->roles );
+			}
+		}
+
+		return (array) apply_filters( 'overseek_search_cache_context', $context );
+	}
+
+	/**
+	 * Resolve a variation URL for exact SKU-like searches.
+	 *
+	 * @param int    $product_id Parent product ID.
+	 * @param string $query Search query.
+	 * @return string
+	 */
+	private function resolve_variation_url_for_query( $product_id, $query ) {
+		$query = strtoupper( trim( (string) $query ) );
+		if ( '' === $query || ! function_exists( 'wc_get_product' ) ) {
+			return '';
+		}
+
+		$product = wc_get_product( $product_id );
+		if ( ! $product || ! $product->is_type( 'variable' ) ) {
+			return '';
+		}
+
+		$children = $product->get_children();
+		foreach ( $children as $variation_id ) {
+			$variation = wc_get_product( $variation_id );
+			if ( ! $variation ) {
+				continue;
+			}
+
+			$sku = strtoupper( (string) $variation->get_sku() );
+			if ( '' !== $sku && $query === $sku ) {
+				$url = get_permalink( $variation_id );
+				return $url ? $url : '';
+			}
+		}
+
+		return '';
 	}
 }

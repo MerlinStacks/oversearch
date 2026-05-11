@@ -910,28 +910,51 @@ function SearchDropdown() {
 	);
 }
 
-// Mount the app into all available containers.
-document.addEventListener( 'DOMContentLoaded', () => {
+function mountSearchInContainer( container ) {
+	if ( ! container || container.dataset.overseekMounted === '1' ) {
+		return;
+	}
+
+	container.dataset.overseekMounted = '1';
+
+	const root = createRoot( container );
+	root.render(
+		<SearchErrorBoundary>
+			<SearchDropdown />
+		</SearchErrorBoundary>
+	);
+}
+
+function mountOverseekApps() {
 	const footerRoot = document.getElementById( 'overseek-search-root' );
 	const inlineContainers = document.querySelectorAll(
 		'[data-overseek-search="true"]'
 	);
 
 	if ( inlineContainers.length > 0 ) {
-		inlineContainers.forEach( ( container ) => {
-			const root = createRoot( container );
-			root.render(
-				<SearchErrorBoundary>
-					<SearchDropdown />
-				</SearchErrorBoundary>
-			);
-		} );
-	} else if ( footerRoot ) {
-		const root = createRoot( footerRoot );
-		root.render(
-			<SearchErrorBoundary>
-				<SearchDropdown />
-			</SearchErrorBoundary>
-		);
+		inlineContainers.forEach( mountSearchInContainer );
+		return;
 	}
+
+	if ( footerRoot ) {
+		mountSearchInContainer( footerRoot );
+	}
+}
+
+if (
+	document.readyState === 'interactive' ||
+	document.readyState === 'complete'
+) {
+	mountOverseekApps();
+} else {
+	document.addEventListener( 'DOMContentLoaded', mountOverseekApps );
+}
+
+const mountObserver = new MutationObserver( () => {
+	mountOverseekApps();
+} );
+
+mountObserver.observe( document.documentElement, {
+	childList: true,
+	subtree: true,
 } );

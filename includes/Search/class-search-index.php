@@ -36,6 +36,11 @@ class Overseek_Search_Index {
 
 		$data = $this->extract_product_data( $product );
 
+		if ( empty( $data ) ) {
+			$this->remove_product( $product_id );
+			return false;
+		}
+
 		return $this->upsert_index( $data );
 	}
 
@@ -47,6 +52,10 @@ class Overseek_Search_Index {
 	 */
 	private function extract_product_data( $product ) {
 		$product_id = $product->get_id();
+
+		if ( ! $this->is_indexable_product( $product ) ) {
+			return array();
+		}
 
 		// Get categories.
 		$categories   = array();
@@ -81,6 +90,9 @@ class Overseek_Search_Index {
 				$attributes = array_merge( $attributes, $attribute->get_options() );
 			}
 		}
+
+		// Get brands from common taxonomies and include in index.
+		$brands = $this->get_brand_names( $product_id );
 
 		// Get variation SKUs for variable products.
 		$variation_skus = array();
@@ -124,6 +136,7 @@ class Overseek_Search_Index {
 					implode( ' ', $categories ),
 					implode( ' ', $tags ),
 					implode( ' ', $attributes ),
+					implode( ' ', $brands ),
 				)
 			)
 		);
@@ -138,9 +151,11 @@ class Overseek_Search_Index {
 			'categories'        => implode( ', ', $categories ),
 			'tags'              => implode( ', ', $tags ),
 			'attributes'        => implode( ', ', $attributes ),
+			'brands'            => implode( ', ', $brands ),
 			'price'             => $product->get_price(),
 			'sale_price'        => $product->get_sale_price(),
 			'stock_status'      => $product->get_stock_status(),
+			'catalog_visibility' => $product->get_catalog_visibility(),
 			'image_url'         => $image_url ? $image_url : '',
 			'search_content'    => $search_content,
 			'language'          => null, // Will be set by multilingual filter if active.
@@ -182,15 +197,17 @@ class Overseek_Search_Index {
 					'categories'        => $data['categories'],
 					'tags'              => $data['tags'],
 					'attributes'        => $data['attributes'],
+					'brands'            => $data['brands'],
 					'price'             => $data['price'],
 					'sale_price'        => $data['sale_price'],
 					'stock_status'      => $data['stock_status'],
+					'catalog_visibility' => $data['catalog_visibility'],
 					'image_url'         => $data['image_url'],
 					'search_content'    => $data['search_content'],
 					'language'          => $data['language'],
 				),
 				array( 'product_id' => $data['product_id'] ),
-				array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s' ),
+				array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s', '%s' ),
 				array( '%d' )
 			);
 		} else {
@@ -207,14 +224,16 @@ class Overseek_Search_Index {
 					'categories'        => $data['categories'],
 					'tags'              => $data['tags'],
 					'attributes'        => $data['attributes'],
+					'brands'            => $data['brands'],
 					'price'             => $data['price'],
 					'sale_price'        => $data['sale_price'],
 					'stock_status'      => $data['stock_status'],
+					'catalog_visibility' => $data['catalog_visibility'],
 					'image_url'         => $data['image_url'],
 					'search_content'    => $data['search_content'],
 					'language'          => $data['language'],
 				),
-				array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s' )
+				array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s', '%s' )
 			);
 		}
 
@@ -286,7 +305,11 @@ class Overseek_Search_Index {
 		$wpdb->query( 'COMMIT' );
 
 		// Clear caches after rebuild.
-		wp_cache_flush_group( 'overseek_search' );
+		if ( function_exists( 'wp_cache_flush_group' ) ) {
+			wp_cache_flush_group( 'overseek_search' );
+		} else {
+			wp_cache_flush();
+		}
 
 		return array(
 			'total'   => $total,
@@ -314,5 +337,72 @@ class Overseek_Search_Index {
 			'indexed_count' => $count,
 			'last_updated'  => $last_updated,
 		);
+	}
+
+	/**
+	 * Run an hourly cron-based incremental reindex.
+	 *
+	 * @return array
+	 */
+	public static function cron_reindex() {
+		$index = new self();
+
+		$stats = $index->rebuild_index();
+
+		return array(
+			'indexed'   => (int) ( $stats['indexed'] ?? 0 ),
+			'failed'    => (int) ( $stats['failed'] ?? 0 ),
+			'remaining' => 0,
+			'total'     => (int) ( $stats['total'] ?? 0 ),
+		);
+	}
+
+	/**
+	 * Check whether a product should be indexed.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @return bool
+	 */
+	private function is_indexable_product( $product ) {
+		if ( ! $product->is_visible() ) {
+			return false;
+		}
+
+		if ( 'hidden' === $product->get_catalog_visibility() ) {
+			return false;
+		}
+
+		return (bool) apply_filters( 'overseek_search_indexable_product', true, $product );
+	}
+
+	/**
+	 * Resolve brand names from known product brand taxonomies.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array
+	 */
+	private function get_brand_names( $product_id ) {
+		$taxonomies = (array) apply_filters(
+			'overseek_search_brand_taxonomies',
+			array( 'product_brand', 'brand', 'pa_brand' )
+		);
+
+		$brands = array();
+		foreach ( $taxonomies as $taxonomy ) {
+			if ( ! taxonomy_exists( $taxonomy ) ) {
+				continue;
+			}
+
+			$terms = wp_get_post_terms( $product_id, $taxonomy, array( 'fields' => 'names' ) );
+			if ( is_wp_error( $terms ) ) {
+				continue;
+			}
+
+			$brands = array_merge( $brands, $terms );
+		}
+
+		$brands = array_map( 'trim', $brands );
+
+		return array_values( array_unique( array_filter( $brands ) ) );
 	}
 }

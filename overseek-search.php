@@ -107,6 +107,10 @@ function overseek_search_activate() {
 	require_once OVERSEEK_SEARCH_PLUGIN_DIR . 'includes/class-overseek-search-database.php';
 	Overseek_Search_Database::create_tables();
 
+	if ( ! wp_next_scheduled( 'overseek_search_reindex_cron' ) ) {
+		wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', 'overseek_search_reindex_cron' );
+	}
+
 	// Set default options.
 	$defaults = array(
 		'fuzzy_enabled'        => true,
@@ -143,6 +147,18 @@ function overseek_search_deactivate() {
 	wp_clear_scheduled_hook( 'overseek_search_reindex_cron' );
 }
 register_deactivation_hook( __FILE__, 'overseek_search_deactivate' );
+
+/**
+ * Ensure cron schedule exists after activation.
+ *
+ * @return void
+ */
+function overseek_search_ensure_cron_schedule() {
+	if ( ! wp_next_scheduled( 'overseek_search_reindex_cron' ) ) {
+		wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', 'overseek_search_reindex_cron' );
+	}
+}
+add_action( 'init', 'overseek_search_ensure_cron_schedule' );
 
 /**
  * Cron callback for background reindexing.
