@@ -663,14 +663,15 @@ function SearchDropdown() {
     triggers.forEach(t => t.addEventListener('click', handleClick));
     return () => triggers.forEach(t => t.removeEventListener('click', handleClick));
   }, []);
-  const abortControllerRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(null);
+  const searchAbortControllerRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(null);
+  const suggestAbortControllerRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(null);
   async function performSearch() {
     // Cancel previous request if still pending.
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
     }
     const abortController = new AbortController();
-    abortControllerRef.current = abortController;
+    searchAbortControllerRef.current = abortController;
 
     // Check cache first.
     const cached = getCachedResults(debouncedQuery);
@@ -708,11 +709,11 @@ function SearchDropdown() {
     setLoading(false);
   }
   async function fetchSuggestions() {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    if (suggestAbortControllerRef.current) {
+      suggestAbortControllerRef.current.abort();
     }
     const abortController = new AbortController();
-    abortControllerRef.current = abortController;
+    suggestAbortControllerRef.current = abortController;
     try {
       const params = new URLSearchParams({
         q: debouncedQuery,

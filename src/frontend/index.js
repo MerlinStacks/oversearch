@@ -610,15 +610,16 @@ function SearchDropdown() {
 			);
 	}, [] );
 
-	const abortControllerRef = useRef( null );
+	const searchAbortControllerRef = useRef( null );
+	const suggestAbortControllerRef = useRef( null );
 
 	async function performSearch() {
 		// Cancel previous request if still pending.
-		if ( abortControllerRef.current ) {
-			abortControllerRef.current.abort();
+		if ( searchAbortControllerRef.current ) {
+			searchAbortControllerRef.current.abort();
 		}
 		const abortController = new AbortController();
-		abortControllerRef.current = abortController;
+		searchAbortControllerRef.current = abortController;
 
 		// Check cache first.
 		const cached = getCachedResults( debouncedQuery );
@@ -660,11 +661,11 @@ function SearchDropdown() {
 	}
 
 	async function fetchSuggestions() {
-		if ( abortControllerRef.current ) {
-			abortControllerRef.current.abort();
+		if ( suggestAbortControllerRef.current ) {
+			suggestAbortControllerRef.current.abort();
 		}
 		const abortController = new AbortController();
-		abortControllerRef.current = abortController;
+		suggestAbortControllerRef.current = abortController;
 
 		try {
 			const params = new URLSearchParams( {
