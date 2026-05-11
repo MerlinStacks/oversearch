@@ -8,8 +8,8 @@
  */
 
 // Prevent direct access.
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
 /**
@@ -17,300 +17,302 @@ if (!defined('ABSPATH')) {
  *
  * Manages the product search index.
  */
-class Overseek_Search_Index
-{
+class Overseek_Search_Index {
 
-    /**
-     * Index a single product.
-     *
-     * @param int $product_id The product ID to index.
-     * @return bool True on success, false on failure.
-     */
-    public function index_product($product_id)
-    {
-        $product = wc_get_product($product_id);
 
-        if (!$product || 'publish' !== $product->get_status()) {
-            $this->remove_product($product_id);
-            return false;
-        }
+	/**
+	 * Index a single product.
+	 *
+	 * @param int $product_id The product ID to index.
+	 * @return bool True on success, false on failure.
+	 */
+	public function index_product( $product_id ) {
+		$product = wc_get_product( $product_id );
 
-        $data = $this->extract_product_data($product);
+		if ( ! $product || 'publish' !== $product->get_status() ) {
+			$this->remove_product( $product_id );
+			return false;
+		}
 
-        return $this->upsert_index($data);
-    }
+		$data = $this->extract_product_data( $product );
 
-    /**
-     * Extract searchable data from a product.
-     *
-     * @param WC_Product $product The product object.
-     * @return array Extracted data.
-     */
-    private function extract_product_data($product)
-    {
-        $product_id = $product->get_id();
+		return $this->upsert_index( $data );
+	}
 
-        // Get categories.
-        $categories = array();
-        $category_ids = $product->get_category_ids();
-        foreach ($category_ids as $cat_id) {
-            $term = get_term($cat_id, 'product_cat');
-            if ($term && !is_wp_error($term)) {
-                $categories[] = $term->name;
-            }
-        }
+	/**
+	 * Extract searchable data from a product.
+	 *
+	 * @param WC_Product $product The product object.
+	 * @return array Extracted data.
+	 */
+	private function extract_product_data( $product ) {
+		$product_id = $product->get_id();
 
-        // Get tags.
-        $tags = array();
-        $tag_ids = $product->get_tag_ids();
-        foreach ($tag_ids as $tag_id) {
-            $term = get_term($tag_id, 'product_tag');
-            if ($term && !is_wp_error($term)) {
-                $tags[] = $term->name;
-            }
-        }
+		// Get categories.
+		$categories   = array();
+		$category_ids = $product->get_category_ids();
+		foreach ( $category_ids as $cat_id ) {
+			$term = get_term( $cat_id, 'product_cat' );
+			if ( $term && ! is_wp_error( $term ) ) {
+				$categories[] = $term->name;
+			}
+		}
 
-        // Get attributes.
-        $attributes = array();
-        $product_attributes = $product->get_attributes();
-        foreach ($product_attributes as $attribute) {
-            if ($attribute->is_taxonomy()) {
-                $terms = wp_get_post_terms($product_id, $attribute->get_name(), array('fields' => 'names'));
-                if (!is_wp_error($terms)) {
-                    $attributes = array_merge($attributes, $terms);
-                }
-            } else {
-                $attributes = array_merge($attributes, $attribute->get_options());
-            }
-        }
+		// Get tags.
+		$tags    = array();
+		$tag_ids = $product->get_tag_ids();
+		foreach ( $tag_ids as $tag_id ) {
+			$term = get_term( $tag_id, 'product_tag' );
+			if ( $term && ! is_wp_error( $term ) ) {
+				$tags[] = $term->name;
+			}
+		}
 
-        // Get variation SKUs for variable products.
-        $variation_skus = array();
-        if ($product->is_type('variable')) {
-            $variations = $product->get_children();
-            foreach ($variations as $variation_id) {
-                $variation = wc_get_product($variation_id);
-                if ($variation) {
-                    $var_sku = $variation->get_sku();
-                    if ($var_sku) {
-                        $variation_skus[] = $var_sku;
-                    }
-                    // Also get variation-specific attributes for searchability.
-                    $var_attributes = $variation->get_attributes();
-                    foreach ($var_attributes as $attr_value) {
-                        if ($attr_value && !in_array($attr_value, $attributes, true)) {
-                            $attributes[] = $attr_value;
-                        }
-                    }
-                }
-            }
-        }
+		// Get attributes.
+		$attributes         = array();
+		$product_attributes = $product->get_attributes();
+		foreach ( $product_attributes as $attribute ) {
+			if ( $attribute->is_taxonomy() ) {
+				$terms = wp_get_post_terms( $product_id, $attribute->get_name(), array( 'fields' => 'names' ) );
+				if ( ! is_wp_error( $terms ) ) {
+					$attributes = array_merge( $attributes, $terms );
+				}
+			} else {
+				$attributes = array_merge( $attributes, $attribute->get_options() );
+			}
+		}
 
-        // Get image URL.
-        $image_url = '';
-        $image_id = $product->get_image_id();
-        if ($image_id) {
-            $image_url = wp_get_attachment_image_url($image_id, 'woocommerce_thumbnail');
-        }
+		// Get variation SKUs for variable products.
+		$variation_skus = array();
+		if ( $product->is_type( 'variable' ) ) {
+			$variations = $product->get_children();
+			foreach ( $variations as $variation_id ) {
+				$variation = wc_get_product( $variation_id );
+				if ( $variation ) {
+					$var_sku = $variation->get_sku();
+					if ( $var_sku ) {
+						$variation_skus[] = $var_sku;
+					}
+					// Also get variation-specific attributes for searchability.
+					$var_attributes = $variation->get_attributes();
+					foreach ( $var_attributes as $attr_value ) {
+						if ( $attr_value && ! in_array( $attr_value, $attributes, true ) ) {
+							$attributes[] = $attr_value;
+						}
+					}
+				}
+			}
+		}
 
-        // Build combined search content (including variation SKUs).
-        $search_content = implode(' ', array_filter(array(
-            $product->get_name(),
-            $product->get_sku(),
-            implode(' ', $variation_skus),
-            wp_strip_all_tags($product->get_description()),
-            wp_strip_all_tags($product->get_short_description()),
-            implode(' ', $categories),
-            implode(' ', $tags),
-            implode(' ', $attributes),
-        )));
+		// Get image URL.
+		$image_url = '';
+		$image_id  = $product->get_image_id();
+		if ( $image_id ) {
+			$image_url = wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' );
+		}
 
-        $data = array(
-            'product_id' => $product_id,
-            'title' => $product->get_name(),
-            'sku' => $product->get_sku(),
-            'variation_skus' => implode(', ', $variation_skus),
-            'description' => wp_strip_all_tags($product->get_description()),
-            'short_description' => wp_strip_all_tags($product->get_short_description()),
-            'categories' => implode(', ', $categories),
-            'tags' => implode(', ', $tags),
-            'attributes' => implode(', ', $attributes),
-            'price' => $product->get_price(),
-            'sale_price' => $product->get_sale_price(),
-            'stock_status' => $product->get_stock_status(),
-            'image_url' => $image_url ? $image_url : '',
-            'search_content' => $search_content,
-            'language' => null, // Will be set by multilingual filter if active.
-        );
+		// Build combined search content (including variation SKUs).
+		$search_content = implode(
+			' ',
+			array_filter(
+				array(
+					$product->get_name(),
+					$product->get_sku(),
+					implode( ' ', $variation_skus ),
+					wp_strip_all_tags( $product->get_description() ),
+					wp_strip_all_tags( $product->get_short_description() ),
+					implode( ' ', $categories ),
+					implode( ' ', $tags ),
+					implode( ' ', $attributes ),
+				)
+			)
+		);
 
-        // Allow multilingual plugins to add language data.
-        return apply_filters('overseek_index_product_data', $data);
-    }
+		$data = array(
+			'product_id'        => $product_id,
+			'title'             => $product->get_name(),
+			'sku'               => $product->get_sku(),
+			'variation_skus'    => implode( ', ', $variation_skus ),
+			'description'       => wp_strip_all_tags( $product->get_description() ),
+			'short_description' => wp_strip_all_tags( $product->get_short_description() ),
+			'categories'        => implode( ', ', $categories ),
+			'tags'              => implode( ', ', $tags ),
+			'attributes'        => implode( ', ', $attributes ),
+			'price'             => $product->get_price(),
+			'sale_price'        => $product->get_sale_price(),
+			'stock_status'      => $product->get_stock_status(),
+			'image_url'         => $image_url ? $image_url : '',
+			'search_content'    => $search_content,
+			'language'          => null, // Will be set by multilingual filter if active.
+		);
 
-    /**
-     * Insert or update a product in the index.
-     *
-     * @param array $data Product data.
-     * @return bool True on success.
-     */
-    private function upsert_index($data)
-    {
-        global $wpdb;
+		// Allow multilingual plugins to add language data.
+		return apply_filters( 'overseek_index_product_data', $data );
+	}
 
-        $table = Overseek_Search_Database::get_index_table();
+	/**
+	 * Insert or update a product in the index.
+	 *
+	 * @param array $data Product data.
+	 * @return bool True on success.
+	 */
+	private function upsert_index( $data ) {
+		global $wpdb;
 
-        // Check if product exists in index.
-        $exists = $wpdb->get_var(
-            $wpdb->prepare(
-                "SELECT id FROM $table WHERE product_id = %d",
-                $data['product_id']
-            )
-        );
+		$table = Overseek_Search_Database::get_index_table();
 
-        if ($exists) {
-            // Update existing record.
-            $result = $wpdb->update(
-                $table,
-                array(
-                    'title' => $data['title'],
-                    'sku' => $data['sku'],
-                    'variation_skus' => $data['variation_skus'],
-                    'description' => $data['description'],
-                    'short_description' => $data['short_description'],
-                    'categories' => $data['categories'],
-                    'tags' => $data['tags'],
-                    'attributes' => $data['attributes'],
-                    'price' => $data['price'],
-                    'sale_price' => $data['sale_price'],
-                    'stock_status' => $data['stock_status'],
-                    'image_url' => $data['image_url'],
-                    'search_content' => $data['search_content'],
-                    'language' => $data['language'],
-                ),
-                array('product_id' => $data['product_id']),
-                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s'),
-                array('%d')
-            );
-        } else {
-            // Insert new record.
-            $result = $wpdb->insert(
-                $table,
-                array(
-                    'product_id' => $data['product_id'],
-                    'title' => $data['title'],
-                    'sku' => $data['sku'],
-                    'variation_skus' => $data['variation_skus'],
-                    'description' => $data['description'],
-                    'short_description' => $data['short_description'],
-                    'categories' => $data['categories'],
-                    'tags' => $data['tags'],
-                    'attributes' => $data['attributes'],
-                    'price' => $data['price'],
-                    'sale_price' => $data['sale_price'],
-                    'stock_status' => $data['stock_status'],
-                    'image_url' => $data['image_url'],
-                    'search_content' => $data['search_content'],
-                    'language' => $data['language'],
-                ),
-                array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s')
-            );
-        }
+		// Check if product exists in index.
+		$exists = $wpdb->get_var(
+			$wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is safe from Overseek_Search_Database
+				"SELECT id FROM $table WHERE product_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$data['product_id']
+			)
+		);
 
-        return false !== $result;
-    }
+		if ( $exists ) {
+			// Update existing record.
+			$result = $wpdb->update(
+				$table,
+				array(
+					'title'             => $data['title'],
+					'sku'               => $data['sku'],
+					'variation_skus'    => $data['variation_skus'],
+					'description'       => $data['description'],
+					'short_description' => $data['short_description'],
+					'categories'        => $data['categories'],
+					'tags'              => $data['tags'],
+					'attributes'        => $data['attributes'],
+					'price'             => $data['price'],
+					'sale_price'        => $data['sale_price'],
+					'stock_status'      => $data['stock_status'],
+					'image_url'         => $data['image_url'],
+					'search_content'    => $data['search_content'],
+					'language'          => $data['language'],
+				),
+				array( 'product_id' => $data['product_id'] ),
+				array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s' ),
+				array( '%d' )
+			);
+		} else {
+			// Insert new record.
+			$result = $wpdb->insert(
+				$table,
+				array(
+					'product_id'        => $data['product_id'],
+					'title'             => $data['title'],
+					'sku'               => $data['sku'],
+					'variation_skus'    => $data['variation_skus'],
+					'description'       => $data['description'],
+					'short_description' => $data['short_description'],
+					'categories'        => $data['categories'],
+					'tags'              => $data['tags'],
+					'attributes'        => $data['attributes'],
+					'price'             => $data['price'],
+					'sale_price'        => $data['sale_price'],
+					'stock_status'      => $data['stock_status'],
+					'image_url'         => $data['image_url'],
+					'search_content'    => $data['search_content'],
+					'language'          => $data['language'],
+				),
+				array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s' )
+			);
+		}
 
-    /**
-     * Remove a product from the index.
-     *
-     * @param int $product_id The product ID to remove.
-     * @return bool True on success.
-     */
-    public function remove_product($product_id)
-    {
-        global $wpdb;
+		return false !== $result;
+	}
 
-        $table = Overseek_Search_Database::get_index_table();
-        $result = $wpdb->delete($table, array('product_id' => $product_id), array('%d'));
+	/**
+	 * Remove a product from the index.
+	 *
+	 * @param int $product_id The product ID to remove.
+	 * @return bool True on success.
+	 */
+	public function remove_product( $product_id ) {
+		global $wpdb;
 
-        return false !== $result;
-    }
+		$table  = Overseek_Search_Database::get_index_table();
+		$result = $wpdb->delete( $table, array( 'product_id' => $product_id ), array( '%d' ) );
 
-    /**
-     * Rebuild the entire search index.
-     *
-     * @param callable|null $progress_callback Optional callback for progress updates.
-     * @return array Index stats.
-     */
-    public function rebuild_index($progress_callback = null)
-    {
-        global $wpdb;
+		return false !== $result;
+	}
 
-        $table = Overseek_Search_Database::get_index_table();
+	/**
+	 * Rebuild the entire search index.
+	 *
+	 * @param callable|null $progress_callback Optional callback for progress updates.
+	 * @return array Index stats.
+	 */
+	public function rebuild_index( $progress_callback = null ) {
+		global $wpdb;
 
-        // Use transaction for safety - if something fails, we can rollback.
-        $wpdb->query('START TRANSACTION');
+		$table = Overseek_Search_Database::get_index_table();
 
-        // Clear existing index only after starting transaction.
-        $wpdb->query("TRUNCATE TABLE $table");
+		// Use transaction for safety - if something fails, we can rollback.
+		$wpdb->query( 'START TRANSACTION' );
 
-        // Get all published products (excluding variations - only index parent products).
-        $args = array(
-            'status' => 'publish',
-            'limit' => -1,
-            'orderby' => 'ID',
-            'order' => 'ASC',
-            'return' => 'ids',
-            'type' => array( 'simple', 'variable', 'grouped', 'external' ),
-        );
+		// Clear existing index only after starting transaction.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is safe from Overseek_Search_Database
+		$wpdb->query( "TRUNCATE TABLE $table" );
 
-        $product_ids = wc_get_products($args);
-        $total = count($product_ids);
-        $indexed = 0;
-        $failed = 0;
+		// Get all published products (excluding variations - only index parent products).
+		$args = array(
+			'status'  => 'publish',
+			'limit'   => -1,
+			'orderby' => 'ID',
+			'order'   => 'ASC',
+			'return'  => 'ids',
+			'type'    => array( 'simple', 'variable', 'grouped', 'external' ),
+		);
 
-        foreach ($product_ids as $index => $product_id) {
-            $success = $this->index_product($product_id);
+		$product_ids = wc_get_products( $args );
+		$total       = count( $product_ids );
+		$indexed     = 0;
+		$failed      = 0;
 
-            if ($success) {
-                $indexed++;
-            } else {
-                $failed++;
-            }
+		foreach ( $product_ids as $index => $product_id ) {
+			$success = $this->index_product( $product_id );
 
-            if (is_callable($progress_callback)) {
-                $progress_callback($index + 1, $total, $product_id);
-            }
-        }
+			if ( $success ) {
+				++$indexed;
+			} else {
+				++$failed;
+			}
 
-        $wpdb->query('COMMIT');
+			if ( is_callable( $progress_callback ) ) {
+				$progress_callback( $index + 1, $total, $product_id );
+			}
+		}
 
-        // Clear caches after rebuild.
-        wp_cache_flush_group('overseek_search');
+		$wpdb->query( 'COMMIT' );
 
-        return array(
-            'total' => $total,
-            'indexed' => $indexed,
-            'failed' => $failed,
-        );
-    }
+		// Clear caches after rebuild.
+		wp_cache_flush_group( 'overseek_search' );
 
-    /**
-     * Get index statistics.
-     *
-     * @return array Index stats.
-     */
-    public function get_stats()
-    {
-        global $wpdb;
+		return array(
+			'total'   => $total,
+			'indexed' => $indexed,
+			'failed'  => $failed,
+		);
+	}
 
-        $table = Overseek_Search_Database::get_index_table();
+	/**
+	 * Get index statistics.
+	 *
+	 * @return array Index stats.
+	 */
+	public function get_stats() {
+		global $wpdb;
 
-        $count = (int) $wpdb->get_var("SELECT COUNT(*) FROM $table");
-        $last_updated = $wpdb->get_var("SELECT MAX(updated_at) FROM $table");
+		$table = Overseek_Search_Database::get_index_table();
 
-        return array(
-            'indexed_count' => $count,
-            'last_updated' => $last_updated,
-        );
-    }
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is safe from Overseek_Search_Database
+		$count        = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is safe from Overseek_Search_Database
+		$last_updated = $wpdb->get_var( "SELECT MAX(updated_at) FROM $table" );
+
+		return array(
+			'indexed_count' => $count,
+			'last_updated'  => $last_updated,
+		);
+	}
 }

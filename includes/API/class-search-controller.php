@@ -8,8 +8,8 @@
  */
 
 // Prevent direct access.
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
 /**
@@ -17,363 +17,348 @@ if (!defined('ABSPATH')) {
  *
  * REST API endpoints for search functionality.
  */
-class Overseek_Search_Search_Controller
-{
+class Overseek_Search_Search_Controller {
 
-    /**
-     * API namespace.
-     *
-     * @var string
-     */
-    private $namespace = 'overseek-search/v1';
 
-    /**
-     * Register REST routes.
-     */
-    public function register_routes()
-    {
-        register_rest_route(
-            $this->namespace,
-            '/search',
-            array(
-                'methods' => 'GET',
-                'callback' => array($this, 'search'),
-                'permission_callback' => '__return_true', // Public endpoint.
-                'args' => array(
-                    'q' => array(
-                        'required' => true,
-                        'type' => 'string',
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'description' => 'The search query.',
-                    ),
-                    'category' => array(
-                        'type' => 'string',
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'description' => 'Filter by category name.',
-                    ),
-                    'price_min' => array(
-                        'type' => 'number',
-                        'sanitize_callback' => 'floatval',
-                        'description' => 'Minimum price filter.',
-                    ),
-                    'price_max' => array(
-                        'type' => 'number',
-                        'sanitize_callback' => 'floatval',
-                        'description' => 'Maximum price filter.',
-                    ),
-                    'stock_status' => array(
-                        'type' => 'string',
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'enum' => array('instock', 'outofstock', 'onbackorder'),
-                        'description' => 'Filter by stock status.',
-                    ),
-                    'page' => array(
-                        'type' => 'integer',
-                        'default' => 1,
-                        'sanitize_callback' => 'absint',
-                        'description' => 'Page number.',
-                    ),
-                    'per_page' => array(
-                        'type' => 'integer',
-                        'default' => 8,
-                        'sanitize_callback' => 'absint',
-                        'minimum' => 1,
-                        'maximum' => 50,
-                        'description' => 'Results per page.',
-                    ),
-                ),
-            )
-        );
+	/**
+	 * API namespace.
+	 *
+	 * @var string
+	 */
+	private $namespace = 'overseek-search/v1';
 
-        register_rest_route(
-            $this->namespace,
-            '/suggest',
-            array(
-                'methods' => 'GET',
-                'callback' => array($this, 'suggest'),
-                'permission_callback' => '__return_true',
-                'args' => array(
-                    'q' => array(
-                        'required' => true,
-                        'type' => 'string',
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'description' => 'The query to get suggestions for.',
-                    ),
-                    'limit' => array(
-                        'type' => 'integer',
-                        'default' => 5,
-                        'sanitize_callback' => 'absint',
-                        'description' => 'Number of suggestions.',
-                    ),
-                ),
-            )
-        );
+	/**
+	 * Register REST routes.
+	 */
+	public function register_routes() {
+		register_rest_route(
+			$this->namespace,
+			'/search',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'search' ),
+				'permission_callback' => '__return_true', // Public endpoint.
+				'args'                => array(
+					'q'            => array(
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'description'       => 'The search query.',
+					),
+					'category'     => array(
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'description'       => 'Filter by category name.',
+					),
+					'price_min'    => array(
+						'type'              => 'number',
+						'sanitize_callback' => 'floatval',
+						'description'       => 'Minimum price filter.',
+					),
+					'price_max'    => array(
+						'type'              => 'number',
+						'sanitize_callback' => 'floatval',
+						'description'       => 'Maximum price filter.',
+					),
+					'stock_status' => array(
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'enum'              => array( 'instock', 'outofstock', 'onbackorder' ),
+						'description'       => 'Filter by stock status.',
+					),
+					'page'         => array(
+						'type'              => 'integer',
+						'default'           => 1,
+						'sanitize_callback' => 'absint',
+						'description'       => 'Page number.',
+					),
+					'per_page'     => array(
+						'type'              => 'integer',
+						'default'           => 8,
+						'sanitize_callback' => 'absint',
+						'minimum'           => 1,
+						'maximum'           => 50,
+						'description'       => 'Results per page.',
+					),
+				),
+			)
+		);
 
-        register_rest_route(
-            $this->namespace,
-            '/popular',
-            array(
-                'methods' => 'GET',
-                'callback' => array($this, 'get_popular_searches'),
-                'permission_callback' => '__return_true',
-                'args' => array(
-                    'limit' => array(
-                        'type' => 'integer',
-                        'default' => 5,
-                        'sanitize_callback' => 'absint',
-                        'description' => 'Number of popular searches to return.',
-                    ),
-                ),
-            )
-        );
-    }
+		register_rest_route(
+			$this->namespace,
+			'/suggest',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'suggest' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'q'     => array(
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'description'       => 'The query to get suggestions for.',
+					),
+					'limit' => array(
+						'type'              => 'integer',
+						'default'           => 5,
+						'sanitize_callback' => 'absint',
+						'description'       => 'Number of suggestions.',
+					),
+				),
+			)
+		);
 
-    /**
-     * Handle search request.
-     *
-     * @param WP_REST_Request $request The request object.
-     * @return WP_REST_Response
-     */
-    public function search($request)
-    {
-        try {
-            $query = $request->get_param('q');
-            $filters = array(
-                'category' => $request->get_param('category'),
-                'price_min' => $request->get_param('price_min'),
-                'price_max' => $request->get_param('price_max'),
-                'stock_status' => $request->get_param('stock_status'),
-            );
-            $page = $request->get_param('page');
-            $per_page = $request->get_param('per_page');
+		register_rest_route(
+			$this->namespace,
+			'/popular',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_popular_searches' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'limit' => array(
+						'type'              => 'integer',
+						'default'           => 5,
+						'sanitize_callback' => 'absint',
+						'description'       => 'Number of popular searches to return.',
+					),
+				),
+			)
+		);
+	}
 
-            // Rate limiting via transients (60 searches per minute per IP).
-            // Note: Transients have a race condition but provide good enough protection for most use cases.
-            $ip_hash = md5($this->get_client_ip());
-            $rate_key = 'overseek_rate_' . $ip_hash;
+	/**
+	 * Handle search request.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @return WP_REST_Response
+	 */
+	public function search( $request ) {
+		try {
+			$query    = $request->get_param( 'q' );
+			$filters  = array(
+				'category'     => $request->get_param( 'category' ),
+				'price_min'    => $request->get_param( 'price_min' ),
+				'price_max'    => $request->get_param( 'price_max' ),
+				'stock_status' => $request->get_param( 'stock_status' ),
+			);
+			$page     = $request->get_param( 'page' );
+			$per_page = $request->get_param( 'per_page' );
 
-            // Use atomic increment via wp_cache_incr if available, otherwise use transient.
-            $rate_count = wp_cache_incr($rate_key, 1, 'overseek_rate');
-            if (false === $rate_count) {
-                // Cache not available, use transient with increased initial count.
-                $rate_count = (int) get_transient($rate_key);
-                if ($rate_count >= 60) {
-                    return new WP_REST_Response(
-                        array('error' => 'Rate limit exceeded. Please try again later.'),
-                        429
-                    );
-                }
-                set_transient($rate_key, $rate_count + 1, MINUTE_IN_SECONDS);
-            } elseif ($rate_count > 60) {
-                return new WP_REST_Response(
-                    array('error' => 'Rate limit exceeded. Please try again later.'),
-                    429
-                );
-            }
-            // Set expiration on first increment.
-            if (1 === $rate_count) {
-                wp_cache_set($rate_key, $rate_count, 'overseek_rate', MINUTE_IN_SECONDS);
-            }
+			// Rate limiting via transients (60 searches per minute per IP).
+			// Note: Transients have a race condition but provide good enough protection for most use cases.
+			$ip_hash  = md5( $this->get_client_ip() );
+			$rate_key = 'overseek_rate_' . $ip_hash;
 
-            // Execute search.
-            $engine = new Overseek_Search_Engine();
-            $results = $engine->search($query, array_filter($filters), $page, $per_page);
+			// Use atomic increment via wp_cache_incr if available, otherwise use transient.
+			$rate_count = wp_cache_incr( $rate_key, 1, 'overseek_rate' );
+			if ( false === $rate_count ) {
+				// Cache not available, use transient with increased initial count.
+				$rate_count = (int) get_transient( $rate_key );
+				if ( $rate_count >= 60 ) {
+					return new WP_REST_Response(
+						array( 'error' => 'Rate limit exceeded. Please try again later.' ),
+						429
+					);
+				}
+				set_transient( $rate_key, $rate_count + 1, MINUTE_IN_SECONDS );
+			} elseif ( $rate_count > 60 ) {
+				return new WP_REST_Response(
+					array( 'error' => 'Rate limit exceeded. Please try again later.' ),
+					429
+				);
+			}
+			// Set expiration on first increment.
+			if ( 1 === $rate_count ) {
+				wp_cache_set( $rate_key, $rate_count, 'overseek_rate', MINUTE_IN_SECONDS );
+			}
 
-            // Check for spelling suggestion if few or no results.
-            $did_you_mean = null;
-            if ($results['total'] <= 3) {
-                $spell_checker = new Overseek_Spell_Checker();
-                $suggestion = $spell_checker->get_suggestion($query);
+			// Execute search.
+			$engine  = new Overseek_Search_Engine();
+			$results = $engine->search( $query, array_filter( $filters ), $page, $per_page );
 
-                // Fallback to index-based suggestion if analytics has nothing.
-                if (!$suggestion && $results['total'] === 0) {
-                    $suggestion = $spell_checker->suggest_from_index($query);
-                }
+			// Check for spelling suggestion if few or no results.
+			$did_you_mean = null;
+			if ( $results['total'] <= 3 ) {
+				$spell_checker = new Overseek_Spell_Checker();
+				$suggestion    = $spell_checker->get_suggestion( $query );
 
-                if ($suggestion) {
-                    $did_you_mean = $suggestion;
-                }
-            }
+				// Fallback to index-based suggestion if analytics has nothing.
+				if ( ! $suggestion && 0 === $results['total'] ) {
+					$suggestion = $spell_checker->suggest_from_index( $query );
+				}
 
-            // Add did_you_mean to results.
-            $results['did_you_mean'] = $did_you_mean;
+				if ( $suggestion ) {
+					$did_you_mean = $suggestion;
+				}
+			}
 
-            // Track analytics if enabled.
-            $settings = get_option('overseek_search_settings', array());
-            if (!empty($settings['track_analytics'])) {
-                $this->track_search($query, $results['total'], $filters);
-            }
+			// Add did_you_mean to results.
+			$results['did_you_mean'] = $did_you_mean;
 
-            return new WP_REST_Response($results, 200);
-        } catch (\Exception $e) {
-            // Log full error details server-side.
-            error_log('OverSeek Search Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+			// Track analytics if enabled.
+			$settings = get_option( 'overseek_search_settings', array() );
+			if ( ! empty( $settings['track_analytics'] ) ) {
+				$this->track_search( $query, $results['total'], $filters );
+			}
 
-            // Only expose details in debug mode.
-            $error_response = array(
-                'error' => defined('WP_DEBUG') && WP_DEBUG ? $e->getMessage() : __('An error occurred while searching.', 'overseek-search'),
-                'results' => array(),
-                'total' => 0,
-            );
+			return new WP_REST_Response( $results, 200 );
+		} catch ( \Throwable $e ) {
+			// Log full error details server-side.
+			error_log( 'OverSeek Search Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
 
-            return new WP_REST_Response($error_response, 500);
-        } catch (\Error $e) {
-            // Log full error details server-side.
-            error_log('OverSeek Search Fatal: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+			// Only expose details in debug mode.
+			$error_response = array(
+				'error'   => defined( 'WP_DEBUG' ) && WP_DEBUG ? $e->getMessage() : __( 'An error occurred while searching.', 'overseek-search' ),
+				'results' => array(),
+				'total'   => 0,
+			);
 
-            // Only expose details in debug mode.
-            $error_response = array(
-                'error' => defined('WP_DEBUG') && WP_DEBUG ? $e->getMessage() : __('An error occurred while searching.', 'overseek-search'),
-                'results' => array(),
-                'total' => 0,
-            );
+			return new WP_REST_Response( $error_response, 500 );
+		}
+	}
 
-            return new WP_REST_Response($error_response, 500);
-        }
-    }
+	/**
+	 * Handle suggestion request (autocomplete).
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @return WP_REST_Response
+	 */
+	public function suggest( $request ) {
+		global $wpdb;
 
-    /**
-     * Handle suggestion request (autocomplete).
-     *
-     * @param WP_REST_Request $request The request object.
-     * @return WP_REST_Response
-     */
-    public function suggest($request)
-    {
-        global $wpdb;
+		$query = $request->get_param( 'q' );
+		$limit = min( $request->get_param( 'limit' ), 10 );
 
-        $query = $request->get_param('q');
-        $limit = min($request->get_param('limit'), 10);
+		if ( strlen( $query ) < 2 ) {
+			return new WP_REST_Response( array( 'suggestions' => array() ), 200 );
+		}
 
-        if (strlen($query) < 2) {
-            return new WP_REST_Response(array('suggestions' => array()), 200);
-        }
+		$table = Overseek_Search_Database::get_index_table();
 
-        $table = Overseek_Search_Database::get_index_table();
-
-        // Get title suggestions.
-        $suggestions = $wpdb->get_col(
-            $wpdb->prepare(
-                "SELECT DISTINCT title FROM $table 
+		// Get title suggestions.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$suggestions = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT title FROM $table
                 WHERE title LIKE %s 
                 ORDER BY title ASC 
                 LIMIT %d",
-                $wpdb->esc_like($query) . '%',
-                $limit
-            )
-        );
+				$wpdb->esc_like( $query ) . '%',
+				$limit
+			)
+		);
+		// phpcs:enable
 
-        return new WP_REST_Response(array('suggestions' => $suggestions), 200);
-    }
+		return new WP_REST_Response( array( 'suggestions' => $suggestions ), 200 );
+	}
 
-    /**
-     * Get popular search queries from analytics.
-     *
-     * @param WP_REST_Request $request The request object.
-     * @return WP_REST_Response
-     */
-    public function get_popular_searches($request)
-    {
-        global $wpdb;
+	/**
+	 * Get popular search queries from analytics.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @return WP_REST_Response
+	 */
+	public function get_popular_searches( $request ) {
+		global $wpdb;
 
-        $limit = min($request->get_param('limit'), 10);
-        $table = Overseek_Search_Database::get_analytics_table();
+		$limit = min( $request->get_param( 'limit' ), 10 );
+		$table = Overseek_Search_Database::get_analytics_table();
 
-        // Get most common search queries from the last 30 days.
+		// Get most common search queries from the last 30 days.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $popular = $wpdb->get_col(
-            $wpdb->prepare(
-                "SELECT query 
-                FROM $table 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$popular = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT query 
+                FROM $table
                 WHERE event_type = 'search' 
                 AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
                 AND results_count > 0
                 GROUP BY query 
                 ORDER BY COUNT(*) DESC 
                 LIMIT %d",
-                $limit
-            )
-        );
+				$limit
+			)
+		);
+		// phpcs:enable
 
-        return new WP_REST_Response(array('popular' => $popular ?: array()), 200);
-    }
+		return new WP_REST_Response( array( 'popular' => $popular ? $popular : array() ), 200 );
+	}
 
-    /**
-     * Track search query for analytics.
-     *
-     * @param string $query        The search query.
-     * @param int    $results_count Number of results.
-     * @param array  $filters      Applied filters.
-     */
-    private function track_search($query, $results_count, $filters)
-    {
-        global $wpdb;
+	/**
+	 * Track search query for analytics.
+	 *
+	 * @param string $query        The search query.
+	 * @param int    $results_count Number of results.
+	 * @param array  $filters      Applied filters.
+	 */
+	private function track_search( $query, $results_count, $filters ) {
+		global $wpdb;
 
-        $table = Overseek_Search_Database::get_analytics_table();
+		$table = Overseek_Search_Database::get_analytics_table();
 
-        $wpdb->insert(
-            $table,
-            array(
-                'query' => substr($query, 0, 255),
-                'results_count' => $results_count,
-                'session_id' => $this->get_session_id(),
-                'user_id' => get_current_user_id() ?: null,
-                'filters_json' => wp_json_encode(array_filter($filters)),
-                'event_type' => 'search',
-            ),
-            array('%s', '%d', '%s', '%d', '%s', '%s')
-        );
-    }
+		$wpdb->insert(
+			$table,
+			array(
+				'query'         => substr( $query, 0, 255 ),
+				'results_count' => $results_count,
+				'session_id'    => $this->get_session_id(),
+				'user_id'       => get_current_user_id() ? get_current_user_id() : null,
+				'filters_json'  => wp_json_encode( array_filter( $filters ) ),
+				'event_type'    => 'search',
+			),
+			array( '%s', '%d', '%s', '%d', '%s', '%s' )
+		);
+	}
 
-    /**
-     * Get session ID from cookie or generate one.
-     *
-     * @return string Session ID.
-     */
-    private function get_session_id()
-    {
-        if (isset($_COOKIE['overseek_sid'])) {
-            $sid = sanitize_text_field(wp_unslash($_COOKIE['overseek_sid']));
-            if (preg_match('/^[a-f0-9]{32}$/', $sid)) {
-                return $sid;
-            }
-        }
-        $new_sid = md5($this->get_client_ip() . time() . wp_rand());
-        setcookie('overseek_sid', $new_sid, time() + DAY_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
-        return $new_sid;
-    }
+	/**
+	 * Get session ID from cookie or generate one.
+	 *
+	 * @return string Session ID.
+	 */
+	private function get_session_id() {
+		if ( isset( $_COOKIE['overseek_sid'] ) ) {
+			$sid = sanitize_text_field( wp_unslash( $_COOKIE['overseek_sid'] ) );
+			if ( preg_match( '/^[a-f0-9]{32}$/', $sid ) ) {
+				return $sid;
+			}
+		}
+		$new_sid = md5( $this->get_client_ip() . time() . wp_rand() );
+		setcookie( 'overseek_sid', $new_sid, time() + DAY_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true );
+		return $new_sid;
+	}
 
-    /**
-     * Get client IP address.
-     * 
-     * Only trusts proxy headers when explicitly configured to prevent IP spoofing.
-     *
-     * @return string IP address.
-     */
-    private function get_client_ip()
-    {
-        $settings = get_option('overseek_search_settings', array());
-        $trust_proxy = !empty($settings['trust_proxy_headers']);
+	/**
+	 * Get client IP address.
+	 *
+	 * Only trusts proxy headers when explicitly configured to prevent IP spoofing.
+	 *
+	 * @return string IP address.
+	 */
+	private function get_client_ip() {
+		$settings    = get_option( 'overseek_search_settings', array() );
+		$trust_proxy = ! empty( $settings['trust_proxy_headers'] );
 
-        $ip = '';
+		$ip = '';
 
-        // Only check proxy headers if explicitly trusted (site behind load balancer/CDN).
-        if ($trust_proxy) {
-            if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-                // Take the first IP in the chain (original client).
-                $forwarded = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']));
-                $ips = explode(',', $forwarded);
-                $ip = trim($ips[0]);
-            } elseif (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-                $ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_CLIENT_IP']));
-            }
-        }
+		// Only check proxy headers if explicitly trusted (site behind load balancer/CDN).
+		if ( $trust_proxy ) {
+			if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+				// Take the first IP in the chain (original client).
+				$forwarded = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
+				$ips       = explode( ',', $forwarded );
+				$ip        = trim( $ips[0] );
+			} elseif ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+				$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
+			}
+		}
 
-        // Fallback to REMOTE_ADDR (always available and not spoofable).
-        if (empty($ip) && !empty($_SERVER['REMOTE_ADDR'])) {
-            $ip = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
-        }
+		// Fallback to REMOTE_ADDR (always available and not spoofable).
+		if ( empty( $ip ) && ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+			$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+		}
 
-        return $ip;
-    }
+		return $ip;
+	}
 }

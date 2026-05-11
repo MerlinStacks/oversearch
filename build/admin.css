@@ -1,1 +1,793 @@
-:root{--os-black:#0a0a0a;--os-white:#fafafa;--os-bg:#f5f5f0;--os-card:#fff;--os-primary:#5046e5;--os-primary-light:#6366f1;--os-accent:#10b981;--os-warning:#f59e0b;--os-danger:#ef4444;--os-purple:#8b5cf6;--os-cyan:#06b6d4;--os-pink:#ec4899;--os-shadow-sm:3px 3px 0 var(--os-black);--os-shadow-md:5px 5px 0 var(--os-black);--os-shadow-lg:8px 8px 0 var(--os-black);--os-shadow-hover:2px 2px 0 var(--os-black);--os-border:3px solid var(--os-black);--os-border-thin:2px solid var(--os-black);--os-font:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;--os-font-mono:"JetBrains Mono","Fira Code",monospace;--os-transition:150ms cubic-bezier(0.4,0,0.2,1);--os-spring:300ms cubic-bezier(0.34,1.56,0.64,1)}.overseek-admin-app{background:var(--os-bg);font-family:var(--os-font);margin-left:-20px;margin-right:0;margin-top:-10px;min-height:100vh;padding:30px}.overseek-admin-app~.notice,.wrap>.notice:first-child{display:none}.overseek-header{align-items:center;border-bottom:var(--os-border-thin);display:flex;justify-content:space-between;margin-bottom:32px;padding-bottom:24px}.overseek-brand{gap:16px}.overseek-brand,.overseek-logo{align-items:center;display:flex}.overseek-logo{background:var(--os-primary);border:var(--os-border);box-shadow:var(--os-shadow-sm);color:#fff;font-size:28px;height:52px;justify-content:center;transform:rotate(-3deg);width:52px}.overseek-admin-title{color:var(--os-black);display:flex;flex-direction:column;font-size:32px;font-weight:800;gap:2px;letter-spacing:-.5px;margin:0}.overseek-admin-title small{color:#666;font-size:13px;font-weight:500;letter-spacing:.5px;text-transform:uppercase}.overseek-version-badge{background:var(--os-accent);border:2px solid var(--os-black);box-shadow:2px 2px 0 var(--os-black);color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;padding:4px 10px;text-transform:uppercase}.overseek-tab-panel .components-tab-panel__tabs{background:transparent;border-bottom:none;display:flex;gap:8px;margin-bottom:28px;padding:0}.overseek-tab-panel .components-tab-panel__tabs-item{background:var(--os-white);border:var(--os-border);box-shadow:var(--os-shadow-sm);color:var(--os-black);cursor:pointer;font-size:14px;font-weight:700;letter-spacing:.5px;padding:14px 24px;text-transform:uppercase;transition:all var(--os-transition)}.overseek-tab-panel .components-tab-panel__tabs-item:hover{background:var(--os-primary-light);box-shadow:var(--os-shadow-md);color:#fff;transform:translate(-2px,-2px)}.overseek-tab-panel .components-tab-panel__tabs-item.is-active{background:var(--os-primary);box-shadow:var(--os-shadow-md);color:#fff;transform:translate(-2px,-2px)}.overseek-bento-grid{display:grid;gap:20px;grid-template-columns:repeat(12,1fr)}.overseek-bento-grid .bento-full{grid-column:span 12}.overseek-bento-grid .bento-half{grid-column:span 6}.overseek-bento-grid .bento-third{grid-column:span 4}.overseek-bento-grid .bento-quarter{grid-column:span 3}.overseek-bento-grid .bento-two-thirds{grid-column:span 8}@media (max-width:1200px){.overseek-bento-grid .bento-half,.overseek-bento-grid .bento-quarter,.overseek-bento-grid .bento-third{grid-column:span 6}.overseek-bento-grid .bento-two-thirds{grid-column:span 12}}@media (max-width:768px){.overseek-bento-grid .bento-half,.overseek-bento-grid .bento-quarter,.overseek-bento-grid .bento-third,.overseek-bento-grid .bento-two-thirds{grid-column:span 12}}.overseek-card{background:var(--os-card);border:var(--os-border);box-shadow:var(--os-shadow-md);overflow:hidden;position:relative;transition:all var(--os-transition)}.overseek-card:hover{box-shadow:var(--os-shadow-lg);transform:translate(-3px,-3px)}.overseek-card.components-card{border-radius:0}.overseek-card .components-card__header{background:var(--os-black);border-bottom:none;border-radius:0;color:var(--os-white);padding:20px 24px}.overseek-card .components-card__header h3,.overseek-card .components-card__header h4{color:var(--os-white);font-size:16px;font-weight:700;letter-spacing:.3px;margin:0;text-transform:uppercase}.overseek-card .components-card__body{padding:24px}.overseek-card:before{background:var(--os-primary);content:"";height:4px;left:0;opacity:0;position:absolute;top:0;transition:opacity var(--os-transition);width:100%}.overseek-card:hover:before{opacity:1}.overseek-card.card-accent:before{background:var(--os-accent);opacity:1}.overseek-card.card-warning:before{background:var(--os-warning);opacity:1}.overseek-card.card-danger:before{background:var(--os-danger);opacity:1}.overseek-card.card-purple:before{background:var(--os-purple);opacity:1}.overseek-card.card-cyan:before{background:var(--os-cyan);opacity:1}.overseek-card.card-pink:before{background:var(--os-pink);opacity:1}.overseek-kpi-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:24px}.kpi-card{background:var(--os-card);border:var(--os-border);box-shadow:var(--os-shadow-sm);cursor:default;padding:24px;position:relative;transition:all var(--os-spring)}.kpi-card:hover{box-shadow:var(--os-shadow-lg);transform:translate(-4px,-4px) rotate(-1deg)}.kpi-card:after{bottom:0;content:"";height:6px;left:0;position:absolute;width:100%}.kpi-card:after,.kpi-card:first-child:after{background:var(--os-primary)}.kpi-card:nth-child(2):after{background:var(--os-accent)}.kpi-card:nth-child(3):after{background:var(--os-warning)}.kpi-card:nth-child(4):after{background:var(--os-purple)}.kpi-card:nth-child(5):after{background:var(--os-cyan)}.kpi-value{color:var(--os-black);display:block;font-family:var(--os-font-mono);font-size:42px;font-weight:900;letter-spacing:-2px;line-height:1}.kpi-label{color:#666;display:block;font-size:12px;font-weight:700;letter-spacing:1px;margin-top:8px;text-transform:uppercase}.overseek-index-stats{border-bottom:2px dashed #ddd;display:flex;gap:40px;margin-bottom:24px;padding:20px 0}.overseek-index-stats .stat{display:flex;flex-direction:column}.overseek-index-stats .stat-value{color:var(--os-primary);font-family:var(--os-font-mono);font-size:36px;font-weight:900;letter-spacing:-1px}.overseek-index-stats .stat-label{color:#888;font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}.overseek-admin-app .components-button{border-radius:0;font-weight:700;letter-spacing:.5px;text-transform:uppercase;transition:all var(--os-transition)}.overseek-admin-app .components-button.is-primary{background:var(--os-primary);border:var(--os-border);box-shadow:var(--os-shadow-sm);color:#fff;padding:12px 24px}.overseek-admin-app .components-button.is-primary:hover{background:var(--os-primary-light);box-shadow:var(--os-shadow-md);transform:translate(-2px,-2px)}.overseek-admin-app .components-button.is-primary:active{box-shadow:var(--os-shadow-hover);transform:translate(0)}.overseek-admin-app .components-button.is-secondary{background:var(--os-white);border:var(--os-border);box-shadow:var(--os-shadow-sm);color:var(--os-black);padding:12px 24px}.overseek-admin-app .components-button.is-secondary:hover{background:var(--os-accent);box-shadow:var(--os-shadow-md);color:#fff;transform:translate(-2px,-2px)}.overseek-admin-app .components-button.is-destructive{background:var(--os-danger);border:var(--os-border);color:#fff}.overseek-admin-app .components-button.is-link{color:var(--os-primary);font-weight:700;text-decoration:underline;text-underline-offset:3px}.overseek-admin-app .components-button.is-link:hover{color:var(--os-black)}.overseek-save-button{font-size:15px;margin-top:28px}.overseek-admin-app .components-toggle-control{background:var(--os-bg);border:2px solid #e5e5e5;margin-bottom:20px;padding:16px;transition:all var(--os-transition)}.overseek-admin-app .components-toggle-control:hover{border-color:var(--os-primary)}.overseek-admin-app .components-toggle-control .components-form-toggle.is-checked .components-form-toggle__track{background:var(--os-accent)}.overseek-admin-app .components-range-control{margin-bottom:24px}.overseek-admin-app .components-range-control__slider{accent-color:var(--os-primary)}.overseek-admin-app .components-text-control__input,.overseek-admin-app select{border:var(--os-border-thin);border-radius:0;font-size:14px;padding:12px 16px;transition:all var(--os-transition)}.overseek-admin-app .components-text-control__input:focus,.overseek-admin-app select:focus{border-color:var(--os-primary);box-shadow:3px 3px 0 var(--os-primary);outline:none}.overseek-table{border-collapse:collapse;font-size:14px;width:100%}.overseek-table th{background:var(--os-bg);border-bottom:var(--os-border);color:var(--os-black);font-size:11px;font-weight:800;letter-spacing:1px;padding:14px 16px;text-align:left;text-transform:uppercase}.overseek-table td{border-bottom:2px solid #eee;padding:16px;transition:all var(--os-transition)}.overseek-table tr:hover td{background:#f0f0f0;transform:translateX(4px)}.overseek-table td:first-child{font-weight:600}.overseek-admin-app .components-notice{border:var(--os-border);border-radius:0;box-shadow:var(--os-shadow-sm);margin-bottom:24px;padding:16px 20px}.overseek-admin-app .components-notice.is-success{background:var(--os-accent);border-color:var(--os-black);color:#fff}.overseek-admin-app .components-notice.is-error{background:var(--os-danger);border-color:var(--os-black);color:#fff}.overseek-admin-app .components-notice.is-info{background:var(--os-primary);border-color:var(--os-black);color:#fff}.overseek-admin-app .components-notice.is-warning{background:var(--os-warning);border-color:var(--os-black);color:var(--os-black)}.overseek-date-filter{align-items:center;display:flex;gap:12px;margin-bottom:24px}.overseek-date-filter label{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}.overseek-date-filter select{background:var(--os-white);border:var(--os-border);box-shadow:var(--os-shadow-sm);cursor:pointer;font-weight:600;padding:10px 16px}.overseek-date-filter select:hover{box-shadow:var(--os-shadow-md);transform:translate(-2px,-2px)}.overseek-synonym-form{display:flex;flex-direction:column;gap:20px;max-width:600px}.overseek-tables-grid{display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(450px,1fr))}@media (max-width:1024px){.overseek-tables-grid{grid-template-columns:1fr}}.overseek-admin-app .components-spinner{display:block;height:40px;margin:60px auto;width:40px}.overseek-empty-state{color:#888;padding:48px 24px;text-align:center}.overseek-empty-state .emoji{display:block;font-size:48px;margin-bottom:16px}.overseek-quick-actions{display:flex;gap:12px;margin-bottom:24px}@keyframes slideIn{0%{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}.overseek-card{animation:slideIn .4s ease forwards}.overseek-card:first-child{animation-delay:0ms}.overseek-card:nth-child(2){animation-delay:50ms}.overseek-card:nth-child(3){animation-delay:.1s}.overseek-card:nth-child(4){animation-delay:.15s}.overseek-card:nth-child(5){animation-delay:.2s}.kpi-card{animation:slideIn .4s ease forwards}.kpi-card:first-child{animation-delay:0ms}.kpi-card:nth-child(2){animation-delay:75ms}.kpi-card:nth-child(3){animation-delay:.15s}.kpi-card:nth-child(4){animation-delay:225ms}.kpi-card:nth-child(5){animation-delay:.3s}@media (max-width:782px){.overseek-admin-app{margin-left:0;padding:16px}.overseek-header{align-items:flex-start;flex-direction:column;gap:16px}.overseek-admin-title{font-size:24px}.overseek-tab-panel .components-tab-panel__tabs{flex-wrap:wrap}.overseek-tab-panel .components-tab-panel__tabs-item{font-size:12px;padding:10px 16px}.kpi-value{font-size:32px}.overseek-index-stats{flex-wrap:wrap;gap:24px}}
+/*!*************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./src/admin/admin.css ***!
+  \*************************************************************************************************************************************************************************/
+/**
+ * OverSeek Search - Admin Styles (2026 Neubrutalism Edition)
+ *
+ * Bold, fast, eye-catching design with sharp edges,
+ * thick borders, vibrant accents, and smooth micro-animations.
+ */
+
+/* ========================================
+	CSS CUSTOM PROPERTIES (Design Tokens)
+	======================================== */
+:root {
+	/* Core palette - vibrant & bold */
+	--os-black: #0a0a0a;
+	--os-white: #fafafa;
+	--os-bg: #f5f5f0;
+	--os-card: #ffffff;
+
+	/* Accent colors - eye-catching */
+	--os-primary: #5046e5;
+	--os-primary-light: #6366f1;
+	--os-accent: #10b981;
+	--os-warning: #f59e0b;
+	--os-danger: #ef4444;
+	--os-purple: #8b5cf6;
+	--os-cyan: #06b6d4;
+	--os-pink: #ec4899;
+
+	/* Neubrutalism shadows */
+	--os-shadow-sm: 3px 3px 0 var(--os-black);
+	--os-shadow-md: 5px 5px 0 var(--os-black);
+	--os-shadow-lg: 8px 8px 0 var(--os-black);
+	--os-shadow-hover: 2px 2px 0 var(--os-black);
+
+	/* Borders */
+	--os-border: 3px solid var(--os-black);
+	--os-border-thin: 2px solid var(--os-black);
+
+	/* Typography */
+	--os-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+	--os-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+	/* Transitions */
+	--os-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+	--os-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ========================================
+	RESET / BASE
+	======================================== */
+.overseek-admin-app {
+	font-family: var(--os-font);
+	background: var(--os-bg);
+	min-height: 100vh;
+	padding: 30px;
+	margin-left: -20px;
+	margin-right: 0;
+	margin-top: -10px;
+}
+
+/* Hide default WP admin notices in our area */
+.overseek-admin-app~.notice,
+.wrap>.notice:first-child {
+	display: none;
+}
+
+/* ========================================
+	HEADER / BRANDING
+	======================================== */
+.overseek-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 32px;
+	padding-bottom: 24px;
+	border-bottom: var(--os-border-thin);
+}
+
+.overseek-brand {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.overseek-logo {
+	width: 52px;
+	height: 52px;
+	background: var(--os-primary);
+	border: var(--os-border);
+	box-shadow: var(--os-shadow-sm);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 28px;
+	color: white;
+	transform: rotate(-3deg);
+}
+
+.overseek-admin-title {
+	font-size: 32px;
+	font-weight: 800;
+	color: var(--os-black);
+	letter-spacing: -0.5px;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.overseek-admin-title small {
+	font-size: 13px;
+	font-weight: 500;
+	color: #666;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+}
+
+.overseek-version-badge {
+	background: var(--os-accent);
+	color: white;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 4px 10px;
+	border: 2px solid var(--os-black);
+	box-shadow: 2px 2px 0 var(--os-black);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+/* ========================================
+	NAVIGATION TABS (Neubrutalist Pills)
+	======================================== */
+.overseek-tab-panel .components-tab-panel__tabs {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 28px;
+	border-bottom: none;
+	background: transparent;
+	padding: 0;
+}
+
+.overseek-tab-panel .components-tab-panel__tabs-item {
+	padding: 14px 24px;
+	font-weight: 700;
+	font-size: 14px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: var(--os-black);
+	background: var(--os-white);
+	border: var(--os-border);
+	box-shadow: var(--os-shadow-sm);
+	transition: all var(--os-transition);
+	cursor: pointer;
+}
+
+.overseek-tab-panel .components-tab-panel__tabs-item:hover {
+	transform: translate(-2px, -2px);
+	box-shadow: var(--os-shadow-md);
+	background: var(--os-primary-light);
+	color: white;
+}
+
+.overseek-tab-panel .components-tab-panel__tabs-item.is-active {
+	background: var(--os-primary);
+	color: white;
+	transform: translate(-2px, -2px);
+	box-shadow: var(--os-shadow-md);
+}
+
+/* ========================================
+	BENTO GRID LAYOUT
+	======================================== */
+.overseek-bento-grid {
+	display: grid;
+	grid-template-columns: repeat(12, 1fr);
+	gap: 20px;
+}
+
+.overseek-bento-grid .bento-full {
+	grid-column: span 12;
+}
+
+.overseek-bento-grid .bento-half {
+	grid-column: span 6;
+}
+
+.overseek-bento-grid .bento-third {
+	grid-column: span 4;
+}
+
+.overseek-bento-grid .bento-quarter {
+	grid-column: span 3;
+}
+
+.overseek-bento-grid .bento-two-thirds {
+	grid-column: span 8;
+}
+
+@media (max-width: 1200px) {
+
+	.overseek-bento-grid .bento-half,
+	.overseek-bento-grid .bento-third,
+	.overseek-bento-grid .bento-quarter {
+		grid-column: span 6;
+	}
+
+	.overseek-bento-grid .bento-two-thirds {
+		grid-column: span 12;
+	}
+}
+
+@media (max-width: 768px) {
+
+	.overseek-bento-grid .bento-half,
+	.overseek-bento-grid .bento-third,
+	.overseek-bento-grid .bento-quarter,
+	.overseek-bento-grid .bento-two-thirds {
+		grid-column: span 12;
+	}
+}
+
+/* ========================================
+	CARDS (Neubrutalist Style)
+	======================================== */
+.overseek-card {
+	background: var(--os-card);
+	border: var(--os-border);
+	box-shadow: var(--os-shadow-md);
+	position: relative;
+	overflow: hidden;
+	transition: all var(--os-transition);
+}
+
+.overseek-card:hover {
+	transform: translate(-3px, -3px);
+	box-shadow: var(--os-shadow-lg);
+}
+
+/* Remove default WP card styling */
+.overseek-card.components-card {
+	border-radius: 0;
+}
+
+.overseek-card .components-card__header {
+	padding: 20px 24px;
+	background: var(--os-black);
+	color: var(--os-white);
+	border-bottom: none;
+	border-radius: 0;
+}
+
+.overseek-card .components-card__header h3,
+.overseek-card .components-card__header h4 {
+	color: var(--os-white);
+	font-weight: 700;
+	font-size: 16px;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	margin: 0;
+}
+
+.overseek-card .components-card__body {
+	padding: 24px;
+}
+
+/* Card accent stripe */
+.overseek-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 4px;
+	background: var(--os-primary);
+	opacity: 0;
+	transition: opacity var(--os-transition);
+}
+
+.overseek-card:hover::before {
+	opacity: 1;
+}
+
+/* Card variants */
+.overseek-card.card-accent::before {
+	background: var(--os-accent);
+	opacity: 1;
+}
+
+.overseek-card.card-warning::before {
+	background: var(--os-warning);
+	opacity: 1;
+}
+
+.overseek-card.card-danger::before {
+	background: var(--os-danger);
+	opacity: 1;
+}
+
+.overseek-card.card-purple::before {
+	background: var(--os-purple);
+	opacity: 1;
+}
+
+.overseek-card.card-cyan::before {
+	background: var(--os-cyan);
+	opacity: 1;
+}
+
+.overseek-card.card-pink::before {
+	background: var(--os-pink);
+	opacity: 1;
+}
+
+/* ========================================
+	KPI / STAT CARDS (Bento Heroes)
+	======================================== */
+.overseek-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 16px;
+	margin-bottom: 24px;
+}
+
+.kpi-card {
+	background: var(--os-card);
+	border: var(--os-border);
+	box-shadow: var(--os-shadow-sm);
+	padding: 24px;
+	position: relative;
+	transition: all var(--os-spring);
+	cursor: default;
+}
+
+.kpi-card:hover {
+	transform: translate(-4px, -4px) rotate(-1deg);
+	box-shadow: var(--os-shadow-lg);
+}
+
+.kpi-card::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 6px;
+	background: var(--os-primary);
+}
+
+.kpi-card:nth-child(1)::after {
+	background: var(--os-primary);
+}
+
+.kpi-card:nth-child(2)::after {
+	background: var(--os-accent);
+}
+
+.kpi-card:nth-child(3)::after {
+	background: var(--os-warning);
+}
+
+.kpi-card:nth-child(4)::after {
+	background: var(--os-purple);
+}
+
+.kpi-card:nth-child(5)::after {
+	background: var(--os-cyan);
+}
+
+.kpi-value {
+	display: block;
+	font-size: 42px;
+	font-weight: 900;
+	color: var(--os-black);
+	line-height: 1;
+	letter-spacing: -2px;
+	font-family: var(--os-font-mono);
+}
+
+.kpi-label {
+	display: block;
+	font-size: 12px;
+	font-weight: 700;
+	color: #666;
+	margin-top: 8px;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+}
+
+/* Index stats variant */
+.overseek-index-stats {
+	display: flex;
+	gap: 40px;
+	margin-bottom: 24px;
+	padding: 20px 0;
+	border-bottom: 2px dashed #ddd;
+}
+
+.overseek-index-stats .stat {
+	display: flex;
+	flex-direction: column;
+}
+
+.overseek-index-stats .stat-value {
+	font-size: 36px;
+	font-weight: 900;
+	color: var(--os-primary);
+	font-family: var(--os-font-mono);
+	letter-spacing: -1px;
+}
+
+.overseek-index-stats .stat-label {
+	font-size: 12px;
+	font-weight: 600;
+	color: #888;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+/* ========================================
+	BUTTONS (Neubrutalist)
+	======================================== */
+.overseek-admin-app .components-button {
+	border-radius: 0;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	transition: all var(--os-transition);
+}
+
+.overseek-admin-app .components-button.is-primary {
+	background: var(--os-primary);
+	color: white;
+	border: var(--os-border);
+	box-shadow: var(--os-shadow-sm);
+	padding: 12px 24px;
+}
+
+.overseek-admin-app .components-button.is-primary:hover {
+	background: var(--os-primary-light);
+	transform: translate(-2px, -2px);
+	box-shadow: var(--os-shadow-md);
+}
+
+.overseek-admin-app .components-button.is-primary:active {
+	transform: translate(0, 0);
+	box-shadow: var(--os-shadow-hover);
+}
+
+.overseek-admin-app .components-button.is-secondary {
+	background: var(--os-white);
+	color: var(--os-black);
+	border: var(--os-border);
+	box-shadow: var(--os-shadow-sm);
+	padding: 12px 24px;
+}
+
+.overseek-admin-app .components-button.is-secondary:hover {
+	background: var(--os-accent);
+	color: white;
+	transform: translate(-2px, -2px);
+	box-shadow: var(--os-shadow-md);
+}
+
+.overseek-admin-app .components-button.is-destructive {
+	background: var(--os-danger);
+	color: white;
+	border: var(--os-border);
+}
+
+.overseek-admin-app .components-button.is-link {
+	color: var(--os-primary);
+	font-weight: 700;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.overseek-admin-app .components-button.is-link:hover {
+	color: var(--os-black);
+}
+
+.overseek-save-button {
+	margin-top: 28px;
+	font-size: 15px;
+}
+
+/* ========================================
+	FORM CONTROLS (Clean & Bold)
+	======================================== */
+.overseek-admin-app .components-toggle-control {
+	margin-bottom: 20px;
+	padding: 16px;
+	background: var(--os-bg);
+	border: 2px solid #e5e5e5;
+	transition: all var(--os-transition);
+}
+
+.overseek-admin-app .components-toggle-control:hover {
+	border-color: var(--os-primary);
+}
+
+.overseek-admin-app .components-toggle-control .components-form-toggle.is-checked .components-form-toggle__track {
+	background: var(--os-accent);
+}
+
+.overseek-admin-app .components-range-control {
+	margin-bottom: 24px;
+}
+
+.overseek-admin-app .components-range-control__slider {
+	accent-color: var(--os-primary);
+}
+
+.overseek-admin-app .components-text-control__input,
+.overseek-admin-app select {
+	border: var(--os-border-thin);
+	border-radius: 0;
+	padding: 12px 16px;
+	font-size: 14px;
+	transition: all var(--os-transition);
+}
+
+.overseek-admin-app .components-text-control__input:focus,
+.overseek-admin-app select:focus {
+	outline: none;
+	border-color: var(--os-primary);
+	box-shadow: 3px 3px 0 var(--os-primary);
+}
+
+/* ========================================
+	TABLES (Sharp & Scannable)
+	======================================== */
+.overseek-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+
+.overseek-table th {
+	font-weight: 800;
+	text-transform: uppercase;
+	font-size: 11px;
+	letter-spacing: 1px;
+	color: var(--os-black);
+	background: var(--os-bg);
+	padding: 14px 16px;
+	text-align: left;
+	border-bottom: var(--os-border);
+}
+
+.overseek-table td {
+	padding: 16px;
+	border-bottom: 2px solid #eee;
+	transition: all var(--os-transition);
+}
+
+.overseek-table tr:hover td {
+	background: #f0f0f0;
+	transform: translateX(4px);
+}
+
+.overseek-table td:first-child {
+	font-weight: 600;
+}
+
+/* ========================================
+	NOTICES (Bold Banners)
+	======================================== */
+.overseek-admin-app .components-notice {
+	margin-bottom: 24px;
+	border-radius: 0;
+	border: var(--os-border);
+	box-shadow: var(--os-shadow-sm);
+	padding: 16px 20px;
+}
+
+.overseek-admin-app .components-notice.is-success {
+	background: var(--os-accent);
+	color: white;
+	border-color: var(--os-black);
+}
+
+.overseek-admin-app .components-notice.is-error {
+	background: var(--os-danger);
+	color: white;
+	border-color: var(--os-black);
+}
+
+.overseek-admin-app .components-notice.is-info {
+	background: var(--os-primary);
+	color: white;
+	border-color: var(--os-black);
+}
+
+.overseek-admin-app .components-notice.is-warning {
+	background: var(--os-warning);
+	color: var(--os-black);
+	border-color: var(--os-black);
+}
+
+/* ========================================
+	DATE FILTER
+	======================================== */
+.overseek-date-filter {
+	margin-bottom: 24px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.overseek-date-filter label {
+	font-weight: 700;
+	text-transform: uppercase;
+	font-size: 12px;
+	letter-spacing: 0.5px;
+}
+
+.overseek-date-filter select {
+	padding: 10px 16px;
+	background: var(--os-white);
+	border: var(--os-border);
+	box-shadow: var(--os-shadow-sm);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.overseek-date-filter select:hover {
+	transform: translate(-2px, -2px);
+	box-shadow: var(--os-shadow-md);
+}
+
+/* ========================================
+	SYNONYM FORM
+	======================================== */
+.overseek-synonym-form {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	max-width: 600px;
+}
+
+/* ========================================
+	TABLES GRID
+	======================================== */
+.overseek-tables-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+	gap: 24px;
+}
+
+@media (max-width: 1024px) {
+	.overseek-tables-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* ========================================
+	LOADING STATE
+	======================================== */
+.overseek-admin-app .components-spinner {
+	width: 40px;
+	height: 40px;
+	margin: 60px auto;
+	display: block;
+}
+
+/* ========================================
+	EMPTY STATES
+	======================================== */
+.overseek-empty-state {
+	text-align: center;
+	padding: 48px 24px;
+	color: #888;
+}
+
+.overseek-empty-state .emoji {
+	font-size: 48px;
+	margin-bottom: 16px;
+	display: block;
+}
+
+/* ========================================
+	QUICK ACTIONS BAR
+	======================================== */
+.overseek-quick-actions {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 24px;
+}
+
+/* ========================================
+	ANIMATIONS
+	======================================== */
+@keyframes slideIn {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.overseek-card {
+	animation: slideIn 0.4s ease forwards;
+}
+
+.overseek-card:nth-child(1) {
+	animation-delay: 0ms;
+}
+
+.overseek-card:nth-child(2) {
+	animation-delay: 50ms;
+}
+
+.overseek-card:nth-child(3) {
+	animation-delay: 100ms;
+}
+
+.overseek-card:nth-child(4) {
+	animation-delay: 150ms;
+}
+
+.overseek-card:nth-child(5) {
+	animation-delay: 200ms;
+}
+
+.kpi-card {
+	animation: slideIn 0.4s ease forwards;
+}
+
+.kpi-card:nth-child(1) {
+	animation-delay: 0ms;
+}
+
+.kpi-card:nth-child(2) {
+	animation-delay: 75ms;
+}
+
+.kpi-card:nth-child(3) {
+	animation-delay: 150ms;
+}
+
+.kpi-card:nth-child(4) {
+	animation-delay: 225ms;
+}
+
+.kpi-card:nth-child(5) {
+	animation-delay: 300ms;
+}
+
+/* ========================================
+	RESPONSIVE
+	======================================== */
+@media (max-width: 782px) {
+	.overseek-admin-app {
+		padding: 16px;
+		margin-left: 0;
+	}
+
+	.overseek-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 16px;
+	}
+
+	.overseek-admin-title {
+		font-size: 24px;
+	}
+
+	.overseek-tab-panel .components-tab-panel__tabs {
+		flex-wrap: wrap;
+	}
+
+	.overseek-tab-panel .components-tab-panel__tabs-item {
+		padding: 10px 16px;
+		font-size: 12px;
+	}
+
+	.kpi-value {
+		font-size: 32px;
+	}
+
+	.overseek-index-stats {
+		flex-wrap: wrap;
+		gap: 24px;
+	}
+}
+
+/*# sourceMappingURL=admin.css.map*/

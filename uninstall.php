@@ -9,21 +9,21 @@
 
 // If uninstall not called from WordPress, exit.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-    exit;
+	exit;
 }
 
 global $wpdb;
 
 // Delete custom tables.
 $tables = array(
-    $wpdb->prefix . 'overseek_search_index',
-    $wpdb->prefix . 'overseek_search_analytics',
-    $wpdb->prefix . 'overseek_search_synonyms',
+	$wpdb->prefix . 'overseek_search_index',
+	$wpdb->prefix . 'overseek_search_analytics',
+	$wpdb->prefix . 'overseek_search_synonyms',
 );
 
 foreach ( $tables as $table ) {
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-    $wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
 }
 
 // Delete options.
@@ -32,7 +32,7 @@ delete_option( 'overseek_search_db_version' );
 
 // Delete transients.
 $wpdb->query(
-    "DELETE FROM {$wpdb->options} 
+	"DELETE FROM {$wpdb->options} 
     WHERE option_name LIKE '_transient_overseek_%' 
     OR option_name LIKE '_transient_timeout_overseek_%'"
 );
